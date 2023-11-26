@@ -14,7 +14,7 @@ import {
 import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { saveUser } from "../../api/Registro/Usuario";
+import {  saveCliente} from "../../api/Registro/Cliente";
 import "../../assets/css/spinner.css"
 const Login = () => {
   const navigate = useNavigate();
@@ -45,9 +45,9 @@ const Login = () => {
       .then(response=>response.json())
       .then(data=>{
         setDownloading(false)
-        console.log(data)
+        
         setEmailVerificado(true);
-        console.log(usuario);
+        
       })
       .catch(err=>{
         console.log(err)

@@ -1,7 +1,3 @@
-
-
-
-// Internamente, customStyles combinará profundamente tus estilos personalizados con los estilos predeterminados.
 const customStyles = {
   rows: {
     style: {
@@ -10,21 +6,15 @@ const customStyles = {
   },
   headCells: {
     style: {
-      // Agregamos un espacio de 8px en los lados izquierdo y derecho del componente
       paddingLeft: '1.5rem',
       paddingRight: '1.5rem',
-      // Establecemos el color de fondo del componente como un tono gris claro (#f1f1f1)
-      backgroundColor: '#f6f9fc',
-      // Establecemos el color del texto dentro del componente como un tono oscuro de gris (#333)
-      color: '#8898aa',
-      // Utilizamos flexbox para organizar los elementos secundarios dentro del componente
+      backgroundColor: '#0047ab', // Cambia el color de fondo a un azul más oscuro (#0047ab)
+      color: '#fff', // Cambia el color del texto a blanco (#fff) para que sea legible
       display: 'flex',
-      // Centramos los elementos secundarios horizontalmente en el componente
       justifyContent: 'center',
-      // Centramos los elementos secundarios verticalmente en el componente
       alignItems: 'center',
-      // Aplicamos un estilo de fuente en negrita al texto dentro del componente
       fontWeight: 'bold',
+      className: 'bg-primary', // Agrega la clase CSS 'bg-primary' al encabezado
     },
   },
   cells: {
@@ -62,4 +52,4 @@ const customTheme = {
   },
 };
 
-export { customStyles, customTheme }
+export { customStyles, customTheme };

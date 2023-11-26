@@ -35,10 +35,6 @@ const Carrusel = () => {
      
         {/* Contenido */}
         
-          <Card className="shadow  border"
-           color="dark"
-           outline>
-            <CardBody>
               <Slider className="custom-slider" {...settings}>
                 <Media className="align-items-center">
                   <img src={slider1} className="w-100" alt="Slide 1" />
@@ -50,8 +46,7 @@ const Carrusel = () => {
                   <img src={slider3} className="w-100" alt="Slide 3" />
                 </Media>
               </Slider>
-            </CardBody>
-          </Card>
+           
         
     </>
   );

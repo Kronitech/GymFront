@@ -1,62 +1,270 @@
-// reactstrap components
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
+  Button,
   Card,
+  CardBody,
+  Row,
+  Col,
   CardHeader,
   CardTitle,
   Container,
-  Row,
-  Col,
-  CardBody,
-  Media,
-  Button,
+  Modal,
+  CardFooter,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
   Table,
+  Progress,
+  Input,
+  FormGroup,
+  Label,
+  Form,
+  Spinner,
 } from "reactstrap";
-// core components
-
-import Header from "../../components/Headers/Header";
 import { Link } from "react-router-dom";
-import DataTable from "react-data-table-component";
-import { listaProblemas } from "../../api/Usuario/Problemas";
-import {  useEffect } from "react";
+import Carrusel from "../../components/Carousel/Carrusel";
+import ChartComponent from "../../components/Carousel/Charts";
+import Header from "../../components/Headers/Header";
+import { useUserContext } from "../../components/Context/UserContext";
+import {
+  asitenciaRegistrada,
+  datosAsitencias,
+  saveAsitencia,
+} from "../../api/Asistencias/Asistencia";
+import "../../assets/css/spinner.css";
+
 const Index = () => {
-  //Columnas de la Datatable
+  //Obtener datos de la grafica de asistencia
+  useEffect(() => {
+    obtenerDatos();
+  }, []);
+  const [datos, setDatos] = useState([]);
+  //Cargando datos
+  const [sleep, setSleep] = useState(true);
+  const obtenerDatos = () => {
+    //setDownloading(true)
+    datosAsitencias()
+      .then((res) => res.json())
+      .then((data) => {
+        setDownloading(false);
+        setDatos(data);
+        setSleep(false);
+      })
+      .catch((error) => {
+        setDownloading(false);
 
-  const [problemas, setProblemas] = useState([]);
+        console.log(error);
+      });
+  };
+  const [downloading, setDownloading] = useState(false);
+  const [modal, setModal] = useState(false);
 
-  const listado = async () => {
-    try {
-      const response = await listaProblemas();
-      const data = await response.json();
-      console.log(data)
-      setProblemas(data.data)
-    } catch (error) {
-      console.log(error)
+  const toggle = () => {
+    setModal(!modal);
+  };
+  // Estado para almacenar la hora seleccionada
+  //const [asistenciaSeleccionada, setAsistenciaSeleccionada] = useState(false);
+  const modulo = localStorage.getItem("modulo");
+  const {
+    membresiaActiva,
+    setMembresiaActiva,
+    cliente,
+    setCliente,
+    fechaInicio,
+    fechaFin,
+    asistenciaSeleccionada,
+    setAsistenciaSeleccionada,
+    time,
+  } = useUserContext();
+
+  useEffect(() => {
+    verificarAsistencia();
+    if (membresiaActiva && !asistenciaSeleccionada) {
+      toggleRegistrar();
+    }
+  }, [membresiaActiva, asistenciaSeleccionada]);
+
+  const [modalRegistrar, setModalRegistrar] = useState(false);
+  const toggleRegistrar = () => {
+    setModalRegistrar(!modalRegistrar);
+  };
+
+  // Definir el horario de inicio y fin
+  const horaInicio = 5;
+  const horaFin = 21;
+
+  // Crear un array para almacenar las filas de la tabla
+  const filas = [];
+
+  for (let hora = horaInicio; hora < horaFin; hora++) {
+    let hora1 = hora;
+    let hora2 = hora;
+    let horarioA = "AM";
+    let horarioB = "AM";
+    if (hora >= 12) {
+      horarioA = "PM";
+      horarioB = "PM";
+    }
+    if (hora >= 12) {
+      hora2 = hora - 12;
+    }
+    if (hora > 12) {
+      hora1 = hora - 12;
+    }
+
+    const horaStr = `${hora1}:00 ${horarioA}- ${hora2 + 1}:00 ${horarioB}`;
+
+    filas.push(
+      <tr key={horaStr}>
+        <td>
+          <FormGroup check inline key={horaStr}>
+            <Input
+              type="checkbox"
+              //checked={horaSeleccionada === horaStr}
+              onChange={() => handleHoraSeleccionada(hora)}
+              value={horaStr}
+              name={`horario`}
+              id={horaStr}
+            />
+            <Label check>{horaStr}</Label>
+          </FormGroup>
+        </td>
+      </tr>
+    );
+  }
+
+  // Función para manejar la selección de una hora
+  const handleHoraSeleccionada = (hora) => {
+    toggleRegistrar();
+    if (!asistenciaSeleccionada) {
+      let id = JSON.parse(localStorage.getItem("data")).id;
+      const asistencia = {
+        usuarioId: id,
+        hora,
+      };
+      saveAsitencia(asistencia)
+        .then((res) => res.json())
+        .then((data) => {
+          setAsistenciaSeleccionada(true);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
     }
   };
-  useEffect(()=>{
-    listado()
-  },[])
 
-  const columns = [
-    { name: "Id" ,selector: (row) => row.id, sortable: true, maxWidth: "35px"},
-    { name: "Nombre" ,selector: (row) => row.nombre, sortable: true,  wrap: true,},
-    { name: "Descripción",selector: (row) => row.descripcion, sortable: true ,  wrap: true,},
-    { name: "Docente",selector: (row) => row.docente, sortable: true ,  wrap: true,},
-    { name: "Nombre BD",selector: (row) => row.nombrebase, sortable: true ,  wrap: true,},
-  ];
-  const filteredProblemas = [];
+  const verificarAsistencia = () => {
+    asitenciaRegistrada()
+      .then((res) => res.json())
+      .then((data) => {
+        setAsistenciaSeleccionada(data);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
+
+  const calcularDiferenciaEnDias = (fecha2) => {
+    // Parsea las fechas en objetos Date
+    const fechaInicio = new Date();
+    const fechaFin = new Date(fecha2);
+
+    // Calcula la diferencia en milisegundos
+    const diferenciaEnMilisegundos = fechaFin - fechaInicio;
+
+    // Convierte la diferencia en días
+    const diferenciaEnDias = diferenciaEnMilisegundos / (1000 * 60 * 60 * 24);
+
+    return Math.abs(Math.round(diferenciaEnDias)); // Usamos Math.abs para asegurarnos de que la diferencia sea positiva
+  };
+
+  useEffect(() => {
+    if(cliente!==null){
+      mostrarAlerta();
+    }
+    
+  }, [cliente]);
+  const mostrarAlerta = () => {
+    
+    let dias = calcularDiferenciaEnDias(fechaFin?.fechaFin);
+    if (Number(dias) <= 7) {
+      toggle();
+    }
+  };
 
   return (
     <>
       <Header />
-      {/* Page content */}
-
       <Container className="mt--7" fluid>
-        {/* Contenido Cards Problemas Practiva Completadas Otros*/}
+        {downloading && (
+          <div className="overlay">
+            <div className="spinner " aria-hidden="true"></div>
+          </div>
+        )}
+        {time ? null : (
+          <>
+            {modulo !== null && modulo === "cliente" && (
+              <Card className="my-2 text-justify ">
+                <CardBody>
+                  <Row>
+                    <div className="col">
+                      {membresiaActiva ? (
+                        <>
+                          <p className="h2 ">
+                            Membresia Activa{" "}
+                            <i
+                              className="fa fa-check-circle fa-1x"
+                              aria-hidden="true"
+                            ></i>{" "}
+                            {calcularDiferenciaEnDias(fechaFin?.fechaFin)} Dias
+                          </p>
+                          <p className="text-dark fw-bold">
+                            Fecha Inicio:{" "}
+                            {fechaInicio?.fechaInicio?.split("T")[0]} Fecha Fin:{" "}
+                            {fechaFin.fechaFin?.split("T")[0]}{" "}
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <p className="text-danger h2">
+                            Membresia terminada{" "}
+                            <i
+                              className="fa fa-ban fa-1x"
+                              aria-hidden="true"
+                            ></i>{" "}
+                          </p>
+                          <p>
+                            Estimado {cliente?.usuario?.nombre} , para renovar
+                            su membresia dirijase con la recepcionista{" "}
+                          </p>
+                        </>
+                      )}
+                    </div>
+                    {!asistenciaSeleccionada && membresiaActiva && (
+                      <div className="col text-right ">
+                        <Button
+                          className="my-0 text-white"
+                          type="button"
+                          color="default"
+                          onClick={toggleRegistrar}
+                        >
+                          Asistencia
+                        </Button>
+                      </div>
+                    )}
+                  </Row>
+                </CardBody>
+              </Card>
+            )}
+          </>
+        )}
+
         <Row>
-          <Col lg="6" xl="3">
-            <Card
+          <Col md="6" className="mt-3">
+            <Carrusel />
+          </Col>
+          <Col md="6" className="mt-3">
+            {/* <Card
               className="card-stats mb-4 mb-xl-0 border "
               color="dark"
               outline
@@ -68,8 +276,8 @@ const Index = () => {
                     to={"/usuario/problemas"}
                   >
                     <Col className="col-auto">
-                      <div className="icon icon-shape bg-danger text-white rounded-circle shadow">
-                        <i className="fas fa-chart-bar" />
+                      <div className="icon icon-shape bg-primary text-white rounded-circle shadow">
+                        <i className="fa fa-clock" />
                       </div>
                     </Col>
                   </Link>
@@ -77,152 +285,189 @@ const Index = () => {
                   <div className="col">
                     <CardTitle
                       tag="h5"
-                      className="text-uppercase text-dark mb-0"
+                      className="text-uppercase text-dark mb-0 mt-3"
                     >
-                      PROBLEMAS
+                      Horario
                     </CardTitle>
-                    <p className="h2 font-weight-bold mb-0 text-center">8</p>
                   </div>
                 </Row>
-                <p className="mt-3 mb-0 text-muted text-sm">
-                  <span className="text-red mr-2">
-                    <i className="fa fa-arrow-up" /> Información
-                  </span>
-                </p>
-              </CardBody>
-            </Card>
-          </Col>
-          <Col lg="6" xl="3">
-            <Card className="card-stats mb-4 mb-xl-0" color="dark" outline>
-              <CardBody>
-                <Row>
-                  <Col className="col-auto">
-                    <div className="icon icon-shape bg-warning text-white rounded-circle shadow">
-                      <i className="fas fa-chart-pie" />
-                    </div>
-                  </Col>
-                  <div className="col">
-                    <CardTitle
-                      tag="h5"
-                      className="text-uppercase text-dark mb-0"
-                    >
-                      PRACTICAS
-                    </CardTitle>
-                    <p className="h2 font-weight-bold mb-0 text-center">20</p>
-                  </div>
-                </Row>
-                <p className="mt-3 mb-0 text-muted text-sm">
-                  <span className="text-warning mr-2">
-                    <i className="fa fa-arrow-up" /> Información
-                  </span>
-                </p>
-              </CardBody>
-            </Card>
-          </Col>
+                <Row className="text-center text-blue d-block">
+                  <p className="mt-3 mb-0 text-muted text-sm">
+                    <span className="text-dark mr-2">
+                      Lunes a Viernes <i className="fa fa-long-arrow-right" />{" "}
+                      5:00 AM - 9:00 PM
+                    </span>
+                  </p>
 
-          <Col lg="6" xl="3">
+                  <p className="mt-3 mb-0 text-muted text-sm">
+                    <span className="text-dark mr-2">
+                      Sabados y Festivos{" "}
+                      <i className="fa fa-long-arrow-right" /> 7:00 AM - 12:00
+                      PM
+                    </span>
+                  </p>
+                </Row>
+                <Link onClick={toggle}>
+                  <p className="mt-3 mb-0 text-muted text-sm text-center">
+                    <span className="text-blue mr-2 ">
+                      <i className="fa fa-users" /> Información de asistencia
+                    </span>
+                  </p>
+                </Link>
+              </CardBody>
+            </Card> */}
             <Card className="card-stats mb-4 mb-xl-0" color="dark" outline>
               <CardBody>
                 <Row>
                   <Col className="col-auto">
-                    <div className="icon icon-shape bg-info text-white rounded-circle shadow">
-                      <i className="fas fa-check" />
-                    </div>
+                    {sleep ? (
+                      <Spinner> </Spinner>
+                    ) : (
+                      <div className="icon icon-shape bg-primary text-white rounded-circle shadow">
+                        <i className="fa fa-users" />
+                      </div>
+                    )}
                   </Col>
                   <div className="col">
                     <CardTitle
                       tag="h5"
-                      className="text-uppercase text-dark mb-0"
+                      className="text-uppercase text-dark mb-0 mt-3"
                     >
-                      COMPLETADOS
+                      GRAFICO DE ASISTENCIA DIARIA
                     </CardTitle>
-                    <p className="h2 font-weight-bold mb-0 text-center">49</p>
                   </div>
                 </Row>
-                <p className="mt-3 mb-0 text-muted text-sm">
-                  <span className="text-info mr-2">
-                    <i className="fas fa-arrow-up" /> Información
-                  </span>
-                </p>
-              </CardBody>
-            </Card>
-          </Col>
-          <Col lg="6" xl="3">
-            <Card className="card-stats mb-4 mb-xl-0" color="dark" outline>
-              <CardBody>
-                <Row>
-                  <Col className="col-auto">
-                    <div className="icon icon-shape bg-yellow text-white rounded-circle shadow">
-                      <i className="fas fa-users" />
-                    </div>
-                  </Col>
-                  <div className="col">
-                    <CardTitle
-                      tag="h5"
-                      className="text-uppercase text-dark mb-0"
-                    >
-                      OTROS
-                    </CardTitle>
-                    <p className="h2 font-weight-bold mb-0 text-center">9</p>
-                  </div>
+                <Row className="text-center text-blue d-block">
+                  <ChartComponent info={datos} />
+                  <p className="mt-3 mb-0 text-muted text-sm">
+                    <span className="text-dark mr-2">
+                      Av. Libertadores con Canal Bogotá. Parqueadero CC. Cúcuta
+                      - Cúcuta, NSA - 0000
+                    </span>
+                  </p>
                 </Row>
-                <p className="mt-3 mb-0 text-muted text-sm">
-                  <span className="text-yellow mr-2">
-                    <i className="fas fa-arrow-up" /> Información
-                  </span>
-                </p>
-              </CardBody>
-            </Card>
-          </Col>
-        </Row>
-        <br />
-        {/* Tabla*/}
-        <Row>
-          <Col className="mb-5 mb-xl-0" xl="12">
-            <Card className="shadow">
-              <CardHeader className="border-0">
-                <Row className="align-items-center">
-                  <div className="col">
-                    <h3 className="mb-0">Lista de Problemas</h3>
-                  </div>
-                  <div className="col text-right">
-                    <Button
-                      color="primary"
-                      href="#pablo"
-                      onClick={(e) => e.preventDefault()}
-                      size="sm"
-                    >
-                      See all
-                    </Button>
-                  </div>
-                </Row>
-              </CardHeader>
-              <CardBody>
-              <DataTable
-                columns={columns}
-                data={problemas}
-                striped
-                pointerOnHover
-                responsive
-                sortActive
-                sortDirection
-                highlightOnHover
-                search // Activa la búsqueda
-                noDataComponent="No se encontraron registros para mostrar."
-                pagination // Activa la paginación
-                paginationComponentOptions={{
-                  rowsPerPageText: "Filas por página:",
-                  rangeSeparatorText: "de",
-                  selectAllRowsItem: true,
-                  selectAllRowsItemText: "Todos",
-                  selectAllRowsItemShow: true,
-                }}
-              />
+                <Link
+                  to="https://www.google.com/maps/place/Bogot%C3%A1/@4.6482975,-74.107807,11z/data=!3m1!4b1!4m6!3m5!1s0x8e3f9bfd2da6cb29:0x239d635520a33914!8m2!3d4.7109886!4d-74.072092!16zL20vMDFkenlj?entry=ttu"
+                  target="_blanc"
+                >
+                  <p className="mt-3 mb-0 text-muted text-sm text-center">
+                    <span className="text-blue mr-2">
+                      <i className="fa fa-location-arrow" /> Ver Mapa
+                    </span>
+                  </p>
+                </Link>
               </CardBody>
             </Card>
           </Col>
         </Row>
       </Container>
+      {/* Modal registrar asistencia */}
+      <Modal
+        className="modal-dialog-centered"
+        size="lg"
+        isOpen={modalRegistrar}
+        toggle={toggleRegistrar}
+      >
+        <div className="modal-body p-0">
+          <Card className="bg-secondary shadow border-0">
+            <CardBody className="px-lg-3 py-lg-2">
+              <Card className="shadow">
+                <div className="text-muted text-center mt-2 mb-3">
+                  <h2 className="text-uppercase">
+                    Registrar asistencia diaria
+                  </h2>
+                </div>
+                <Form>
+                  <Row>
+                    <Col sm="6">
+                      <Table
+                        className="align-items-center table-flush text-center text-dark fw-bold"
+                        responsive
+                      >
+                        <thead className="thead-light ">
+                          <tr>
+                            <th scope="col">Horario A</th>
+                          </tr>
+                        </thead>
+                        <tbody>{filas.slice(0, filas.length / 2)}</tbody>
+                      </Table>
+                    </Col>
+                    <Col sm="6">
+                      <Table
+                        className="align-items-center table-flush text-center text-dark fw-bold"
+                        responsive
+                      >
+                        <thead className="thead-light">
+                          <tr>
+                            <th scope="col">Horario B</th>
+                          </tr>
+                        </thead>
+                        <tbody>{filas.slice(filas.length / 2)}</tbody>
+                      </Table>
+                    </Col>
+                  </Row>
+                </Form>
+              </Card>
+            </CardBody>
+          </Card>
+        </div>
+      </Modal>
+      {/*Modal Ver Alerta*/}
+      <Modal
+        className="modal-dialog-centered modal-danger"
+        contentClassName="bg-gradient-danger"
+        size="lg"
+        isOpen={modal}
+        toggle={toggle}
+      >
+        <div className="modal-body p-0">
+          <Card className="bg-danger shadow border-0 text-white">
+            <CardHeader className="bg-transparent pb-0 d-flex justify-content-between">
+              <div
+                className="text-muted text-center mt-2 mb-3"
+                style={{ flex: 1, textAlign: "center" }}
+              >
+             
+              </div>
+              <button
+                className="btn btn-close text-white"
+                style={{
+                  backgroundColor: "transparent",
+                  border: "none",
+                }}
+                onClick={toggle}
+              >
+                <i className="fa fa-times-circle" aria-hidden="true"></i>
+              </button>
+            </CardHeader>
+
+            <CardBody className="px-lg-3 py-lg-2 ">
+              <div className="py-3 text-center">
+              <i className="fa fa-bell fa-3x" aria-hidden="true" /> 
+                <h1 className="heading mt-4 text-white h1">
+                  ¡Tu membresía está por expirar!
+                </h1>
+                <p>
+                Quedan solo <small className="fw-bold h3 text-white"> ' {calcularDiferenciaEnDias(fechaFin?.fechaFin)} '</small> días para que tu membresía expire. Asegúrate de
+                  renovarla para seguir disfrutando de nuestros servicios.
+                </p>
+              </div>
+            </CardBody>
+            <CardFooter className="bg-danger">
+              <div className="text-center">
+                {/* <Button
+                  className="my-0 text-white"
+                  type="button"
+                  color="default"
+                  onClick={toggle}
+                >
+                  Entendido
+                </Button> */}
+              </div>
+            </CardFooter>
+          </Card>
+        </div>
+      </Modal>
     </>
   );
 };

@@ -26,19 +26,29 @@ import {
 } from "reactstrap";
 
 import { useNavigate } from "react-router-dom";
-import urlImagen from "../../assets/img/user.png"
+import urlImagen from "../../assets/img/user.png";
+import { useUserContext } from "../Context/UserContext";
 const Sidebar = (props) => {
-  const navigate = useNavigate(); 
-  // Función para cerrar sesión y redirigir al usuario al login
-const handleCerrarSesion = () => {
-  
-  // Borramos el token del localStorage
-  localStorage.clear();
+  const navigate = useNavigate();
+  const modulo = localStorage.getItem("modulo");
 
-  // Redirigimos al usuario al login
-  navigate("/auth/index", { replace: true });
- // window.location.replace("/auth/login");
-};
+  const { membresiaActiva, urlImagen } = useUserContext();
+  // Función para cerrar sesión y redirigir al usuario al login
+  const handleCerrarSesion = () => {
+    // Borramos el token del localStorage
+    localStorage.clear();
+
+    // Redirigimos al usuario al login
+    navigate("/auth/index", { replace: true });
+    // window.location.replace("/auth/login");
+  };
+  const handlePerfil = () => {
+    if (membresiaActiva && modulo === "cliente") {
+      navigate("/" + modulo + "/perfil", { replace: true });
+    } else if (modulo != "cliente") {
+      navigate("/" + modulo + "/perfil", { replace: true });
+    }
+  };
   const [collapseOpen, setCollapseOpen] = useState();
   // verifies if routeName is the one active (in browser input)
   const activeRoute = (routeName) => {
@@ -52,22 +62,34 @@ const handleCerrarSesion = () => {
   const closeCollapse = () => {
     setCollapseOpen(false);
   };
+
   // creates the links that appear in the left menu / Sidebar
   const createLinks = (routes) => {
-    return routes.map((prop, key) => {
+    if (membresiaActiva) {
+      return routes.map((prop, key) => {
+        return (
+          <NavItem key={key}>
+            <NavLink
+              to={prop.layout + prop.path}
+              tag={NavLinkRRD}
+              onClick={closeCollapse}
+            >
+              <i className={prop.icon} />
+              {prop.name}
+            </NavLink>
+          </NavItem>
+        );
+      });
+    } else {
       return (
-        <NavItem key={key}>
-          <NavLink
-            to={prop.layout + prop.path}
-            tag={NavLinkRRD}
-            onClick={closeCollapse}
-          >
-            <i className={prop.icon} />
-            {prop.name}
+        <NavItem key={1}>
+          <NavLink to="/cliente/index" tag={NavLinkRRD} onClick={closeCollapse}>
+            <i className="fas  fa-home text-blue" />
+            Index
           </NavLink>
         </NavItem>
       );
-    });
+    }
   };
 
   const { bgColor, routes, logo } = props;
@@ -115,13 +137,16 @@ const handleCerrarSesion = () => {
             <DropdownToggle nav>
               <Media className="align-items-center">
                 <span className="avatar avatar-sm rounded-circle">
-                  <img alt="..." src={urlImagen} 
-                  style={{
-                    width: "40px", // Ajusta el tamaño de acuerdo a tus preferencias
-                    height: "40px", // Ajusta el tamaño de acuerdo a tus preferencias
-                    objectFit: "cover", // Escala la imagen para ajustarse manteniendo la proporción
-                    borderRadius: "50%", // Hace que la imagen sea redonda
-                  }}/>
+                  <img
+                    alt="..."
+                    src={urlImagen}
+                    style={{
+                      width: "40px", // Ajusta el tamaño de acuerdo a tus preferencias
+                      height: "40px", // Ajusta el tamaño de acuerdo a tus preferencias
+                      objectFit: "cover", // Escala la imagen para ajustarse manteniendo la proporción
+                      borderRadius: "50%", // Hace que la imagen sea redonda
+                    }}
+                  />
                 </span>
               </Media>
             </DropdownToggle>
@@ -129,13 +154,13 @@ const handleCerrarSesion = () => {
               <DropdownItem className="noti-title" header tag="div">
                 <h6 className="text-overflow m-0">Opciones</h6>
               </DropdownItem>
-              <DropdownItem to="/admin/user-profile" tag={Link}>
+              <DropdownItem onClick={handlePerfil}>
                 <i className="ni ni-single-02" />
                 <span>Mi perfil</span>
               </DropdownItem>
 
               <DropdownItem divider />
-              <DropdownItem  onClick={handleCerrarSesion}>
+              <DropdownItem onClick={handleCerrarSesion}>
                 <i className="ni ni-user-run" />
                 <span>Cerrar Sesion</span>
               </DropdownItem>
@@ -188,7 +213,7 @@ const handleCerrarSesion = () => {
           {/* Divider */}
           <hr className="my-3" />
           {/* Heading */}
-          <h6 className="navbar-heading  text-center">UFPS</h6>
+          <h6 className="navbar-heading  text-center">ENERGY TIME</h6>
           {/* Navigation */}
         </Collapse>
       </Container>

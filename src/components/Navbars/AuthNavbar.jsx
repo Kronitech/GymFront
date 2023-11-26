@@ -12,6 +12,7 @@ import {
   NavLink,
   Nav,
   Col,
+
 } from "reactstrap";
 import logo from "../../assets/img/brand/logo.svg";
 
@@ -51,23 +52,25 @@ const AdminNavbar = () => {
             <Nav className="ml-auto" navbar>
               <NavItem>
                 <NavLink className="nav-link-icon" to="/" tag={Link}>
-                  <i className="ni ni-planet" />
+                  <i className="fa fa-home" />
                   <span className="nav-link-inner--text">Inicio</span>
                 </NavLink>
               </NavItem>
               <NavItem>
-                <NavLink className="nav-link-icon" tag={Link}>
-                  <i className="ni ni-key-25" />
+                <NavLink className="nav-link-icon" tag={Link}
+                to="/auth/login?modulo=admin">
+                  <i className="fa fa-building" />
                   <span className="nav-link-inner--text">Corporativo</span>
                 </NavLink>
               </NavItem>
               <NavItem>
                 <NavLink
                   className="nav-link-icon"
-                  to="/auth/login"
+                  to="/auth/login?modulo=cliente"
                   tag={Link}
+                  
                 >
-                  <i className="ni ni-single-02" />
+                  <i className="fa fa-user" />
                   <span className="nav-link-inner--text">Iniciar Sesion</span>
                 </NavLink>
               </NavItem>

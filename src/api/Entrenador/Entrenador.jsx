@@ -1,9 +1,9 @@
 import { urlBackend } from "../urlBackend";
 
-async function listaProblemas(){
+async function getEntrenador(id){
     const token=localStorage.getItem("token")
-    const result=await fetch(urlBackend+"problemas",{
-        method:"GET",
+    const result=await fetch(urlBackend+"entrenador/"+id,{
+        method:'GET',
         headers:{
             "Authorization":"Bearer "+token
         }
@@ -11,4 +11,4 @@ async function listaProblemas(){
     return result;
 }
 
-export {listaProblemas}
+export {getEntrenador}

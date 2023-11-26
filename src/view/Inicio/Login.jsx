@@ -10,30 +10,41 @@ import {
   InputGroupText,
   Row,
   Col,
+  Nav,
+  NavItem,
+  NavLink,
 } from "reactstrap";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { iniciarSesion } from "../../api/LoginApi";
 import { useState } from "react";
+import "../../assets/css/spinner.css";
+import { MagicTabSelect } from "react-magic-motion";
+
 const Login = () => {
   const navigate = useNavigate();
+  // Usa useLocation para obtener la ubicación actual
+  const location = useLocation();
+
+  // Analiza los parámetros de búsqueda (query string) de la URL
+  const searchParams = new URLSearchParams(location.search);
+  const modulo = searchParams.get("modulo");
   const [contraseñaIncorrecta, setContraseñaIncorrecta] = useState(false);
   const [mensaje, setMensaje] = useState("");
-
-  
+  const [downloading, setDownloading] = useState(false);
   const handelSubmit = (e) => {
+    setDownloading(true);
     setContraseñaIncorrecta(false);
     e.preventDefault();
 
     const formData = new FormData(e.target);
-    const email = formData.get("email")
+    const email = formData.get("email").toUpperCase();
     const password = formData.get("password");
 
     const usuario = {
-       email,
+      email,
       password,
     };
-    console.log(usuario)
     //Realizo peticion para iniciar sesion
     iniciarSesion(usuario)
       .then((response) => response)
@@ -42,21 +53,30 @@ const Login = () => {
           setContraseñaIncorrecta(false);
           const bearerToken = JWT.headers.get("Authorization");
           const token = bearerToken.replace("Bearer ", "");
-          localStorage.setItem("token", token);
-          localStorage.setItem("data", JSON.stringify(parseJwt(token)));
-          const usuario = JSON.parse(localStorage.getItem("data"));
-          const rol = usuario.roles[0].nombre
-            .split("_")[1]
-            .toLowerCase();
-          localStorage.setItem("modulo", rol);
-          navigate("/" + rol + "/index");
+
+          const usuario = JSON.parse(JSON.stringify(parseJwt(token)));
+          const rol = usuario.roles[0].nombre.split("_")[1].toLowerCase();
+          if (modulo === rol) {
+            localStorage.setItem("token", token);
+            localStorage.setItem("data", JSON.stringify(parseJwt(token)));
+
+            localStorage.setItem("modulo", rol);
+            navigate("/" + rol + "/index");
+            setDownloading(false);
+          } else {
+            setDownloading(false)
+            alert("Usuario no autorizado");
+          }
         } else {
+          setDownloading(false);
           setContraseñaIncorrecta(true);
           setMensaje("Contraseña o Email incorrecto");
-          eliminarToken()
+
+          //eliminarToken();
         }
       })
       .catch((err) => {
+        setDownloading(false);
         console.log(err);
       });
   };
@@ -75,38 +95,187 @@ const Login = () => {
 
     return JSON.parse(jsonPayload);
   }
-  const eliminarToken=()=>{
+  const eliminarToken = () => {
     // Tiempo de expiración del token en milisegundos (1800000 ms = 30 minutos)
-const tiempoExpiracionToken = 1800000;
-    setTimeout(()=>{
-      alert("se acabo su tiempo")
-      localStorage.clear()
-    },tiempoExpiracionToken)
-  }
+    const tiempoExpiracionToken = 1800000;
+    setTimeout(() => {
+      alert("se acabo su tiempo");
+      localStorage.clear();
+    }, tiempoExpiracionToken);
+  };
 
   return (
     <>
       <Col lg="5" md="7">
-        <Card className="bg-secondary shadow  border my-2" color="dark" outline>
+        {downloading && (
+          <div className="overlay">
+            <div className="spinner " aria-hidden="true"></div>
+          </div>
+        )}
+        <Card className="bg-white shadow  border my-2" color="primary" outline>
           <CardBody className="px-lg-5 py-lg-5">
-            <h1 className="text-center p-3 text-dark fw-bold">
-              Iniciar Sesión
+            <h1 className="text-center  p-3 text-dark fw-bold">
+              BIENVENIDO
             </h1>
+
+            <Nav fill className="text-center align-items-center ">
+              <NavItem>
+                <NavLink active title="CLIENTE">
+                  <Link to="?modulo=cliente">
+                    <i className="fa fa-user text-primary" aria-hidden="true" />
+                    <p className=" h6">CLIENTE</p>
+                  </Link>
+
+                  {modulo === "cliente" && (
+                    <div
+                      style={{
+                        position: "relative",
+                        transform: "translateY(3px)",
+                      }}
+                    >
+                      <MagicTabSelect
+                        id="underline"
+                        transition={{ type: "spring", bounce: 0.3 }}
+                      >
+                        <div
+                          style={{
+                            width: "100%",
+                            height: "0.15rem",
+                            backgroundColor: "black",
+                            position: "absolute",
+                          }}
+                        />
+                      </MagicTabSelect>
+                    </div>
+                  )}
+                </NavLink>
+              </NavItem>
+              <NavItem>
+                <NavLink title="ADMINISTRADOR">
+                  <Link to="?modulo=admin">
+                    <i
+                      className="fa fa-bar-chart text-danger"
+                      aria-hidden="true"
+                    />
+                    <p className=" h6">ADMIN </p>
+                  </Link>
+
+                  {modulo === "admin" && (
+                    <div
+                      style={{
+                        position: "relative",
+                        transform: "translateY(3px)",
+                      }}
+                    >
+                      <MagicTabSelect
+                        id="underline"
+                        transition={{ type: "spring", bounce: 0.3 }}
+                      >
+                        <div
+                          style={{
+                            width: "100%",
+                            height: "0.15rem",
+                            backgroundColor: "black",
+                            position: "absolute",
+                          }}
+                        />
+                      </MagicTabSelect>
+                    </div>
+                  )}
+                </NavLink>
+              </NavItem>
+              <NavItem>
+                <NavLink title="ENTRENADOR">
+                  <Link to="?modulo=entrenador">
+                    <i className="fa fa-bolt text-yellow" aria-hidden="true" />
+                    <p className=" h6">ENTRENA</p>
+                  </Link>
+
+                  {modulo === "entrenador" && (
+                    <div
+                      style={{
+                        position: "relative",
+                        transform: "translateY(3px)",
+                      }}
+                    >
+                      <MagicTabSelect
+                        id="underline"
+                        transition={{ type: "spring", bounce: 0.3 }}
+                      >
+                        <div
+                          style={{
+                            width: "100%",
+                            height: "0.15rem",
+                            backgroundColor: "black",
+                            position: "absolute",
+                          }}
+                        />
+                      </MagicTabSelect>
+                    </div>
+                  )}
+                </NavLink>
+              </NavItem>
+              <NavItem>
+                <NavLink title="RECEPCIONISTA">
+                  <Link to="?modulo=recepcionista">
+                    <i
+                      className="fa fa-address-book text-success"
+                      aria-hidden="true"
+                    />
+                    <p className=" h6">RECEPCI</p>
+                  </Link>
+
+                  {modulo === "recepcionista" && (
+                    <div
+                      style={{
+                        position: "relative",
+                        transform: "translateY(3px)",
+                      }}
+                    >
+                      <MagicTabSelect
+                        id="underline"
+                        transition={{ type: "spring", bounce: 0.3 }}
+                      >
+                        <div
+                          style={{
+                            width: "100%",
+                            height: "0.15rem",
+                            backgroundColor: "black",
+                            position: "absolute",
+                          }}
+                        />
+                      </MagicTabSelect>
+                    </div>
+                  )}
+                </NavLink>
+              </NavItem>
+            </Nav>
+            <br />
             <Form role="form" onSubmit={handelSubmit}>
               {contraseñaIncorrecta && (
                 <div
-                  className="alert bg-danger text-white text-center"
+                  className="alert bg-danger  text-white text-center"
                   role="alert"
                 >
                   {mensaje}
                 </div>
               )}
               <FormGroup className="mb-3">
+                <label
+                  className="form-control-label text-dark"
+                  htmlFor="nombre"
+                >
+                  CORREO ELECTRONICO
+                </label>
                 <InputGroup className="input-group-alternative">
                   <InputGroupText>
-                    <i className="fa fa-envelope" aria-hidden="true" />
+                    <i
+                      className="fa fa-envelope text-primary"
+                      aria-hidden="true"
+                    />
                   </InputGroupText>
                   <Input
+                    className="text-dark border"
                     placeholder="Email"
                     type="text"
                     autoComplete="new-email"
@@ -116,11 +285,18 @@ const tiempoExpiracionToken = 1800000;
                 </InputGroup>
               </FormGroup>
               <FormGroup>
+                <label
+                  className="form-control-label text-dark"
+                  htmlFor="nombre"
+                >
+                  CONTRASEÑA
+                </label>
                 <InputGroup className="input-group-alternative">
                   <InputGroupText>
-                    <i className="fa fa-lock" aria-hidden="true" />
+                    <i className="fa fa-lock text-primary" aria-hidden="true" />
                   </InputGroupText>
                   <Input
+                    className="text-dark border "
                     placeholder="Contraseña"
                     type="password"
                     autoComplete="new-password"
@@ -131,7 +307,7 @@ const tiempoExpiracionToken = 1800000;
               </FormGroup>
               <div className="text-center">
                 <Button
-                  className="my-4 text-white fw-bold bg-gradient-primary"
+                  className="my-4 text-white fw-bold bg-primary"
                   type="submit"
                 >
                   Iniciar sesión
@@ -146,7 +322,6 @@ const tiempoExpiracionToken = 1800000;
               <small className="text-dark h5">¿Olvidaste tu contraseña?</small>
             </Link>
           </Col>
-          
         </Row>
       </Col>
     </>

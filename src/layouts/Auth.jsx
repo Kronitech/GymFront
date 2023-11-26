@@ -9,6 +9,7 @@ import AuthNavbar from "../components/Navbars/AuthNavbar.jsx";
 import AuthFooter from "../components/Footers/AuthFooter.jsx";
 
 import routes from "../routes.jsx";
+import { UserProvider } from "../components/Context/UserContext.jsx";
 
 const Auth = () => {
   const mainContent = React.useRef(null);
@@ -40,6 +41,7 @@ const Auth = () => {
 
   return (
     <>
+    <UserProvider>
       <div className="main-content" ref={mainContent}>
         <AuthNavbar />
         <div className="header bg-primary py-8 py-lg-8">
@@ -72,6 +74,7 @@ const Auth = () => {
         </Container>
       </div>
       <AuthFooter />
+      </UserProvider>
     </>
   );
 };
