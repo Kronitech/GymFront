@@ -26,11 +26,10 @@ import {
 } from "reactstrap";
 
 import { useNavigate } from "react-router-dom";
-import urlImagen from "../../assets/img/user.png";
 import { useUserContext } from "../Context/UserContext";
 
 const Sidebar = (props) => {
-  const { urlImagen, membresiaActiva, usuario } = useUserContext();
+  const { urlImagen, membresiaActiva, logoImg } = useUserContext();
   const navigate = useNavigate();
   // Función para cerrar sesión y redirigir al usuario al login
   const handleCerrarSesion = () => {
@@ -111,12 +110,13 @@ const Sidebar = (props) => {
           <span className="navbar-toggler-icon" />
         </button>
         {/* Brand */}
-        {logo ? (
+       
+        {logo && logoImg ? (
           <NavbarBrand className="pt-0" {...navbarBrandProps}>
             <img
               alt={logo.imgAlt}
               className="navbar-brand-img"
-              src={logo.imgSrc}
+              src={logoImg}
             />
           </NavbarBrand>
         ) : null}

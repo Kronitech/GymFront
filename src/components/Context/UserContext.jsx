@@ -1,22 +1,95 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { usuarioMembresiaByCedula } from "../../api/Membresia/Membresia";
-import { asitenciaRegistrada } from "../../api/Asistencias/Asistencia";
+import {
+  listaMembresia,
+  listaUsuarioMembresia,
+  usuarioMembresiaByCedula,
+} from "../../api/Membresia/Membresia";
+import {
+  asitenciaRegistrada,
+  datosAsitencias,
+  listaAsistencia,
+} from "../../api/Asistencias/Asistencia";
 import logoUser from "../../assets/img/user.png";
 import { downloadImagenPerfil } from "../../api/Perfil/Perfil";
 import { getEntrenador } from "../../api/Entrenador/Entrenador";
-import { listaImagenPublicidad,downloadImagenPublicidad } from "../../api/Publicidad/Publicidad";
+import {
+  listaImagenPublicidad,
+  downloadImagenPublicidad,
+  getCorporativo,
+  downloadLogo,
+  downloadHorario,
+} from "../../api/Corporativo/Corporativo";
+import { listaEjercicios } from "../../api/Rutinas/Ejercicios";
+import { listaRutinas } from "../../api/Rutinas/Rutinas";
+import { listaUsuarioRol } from "../../api/Usuarios/Usuario";
 
 const UserContext = createContext();
 
 export const useUserContext = () => useContext(UserContext);
 
 export const UserProvider = ({ children }) => {
+  /*
+     MODULO  INICIO -- PUBLICIDADES
+  */
+  //Informacion de la corporacion
+  useEffect(() => {
+    obtenerInformacionCorporativa();
+  }, []);
 
+  const [logoImg, setLogoImg] = useState("");
+  const [horario, setHorario] = useState("");
+  
+  const [corporativo, setCorporativo] = useState([]);
+  const obtenerInformacionCorporativa = async () => {
+    try {
+      getCorporativo()
+        .then((res) => res.json())
+        .then((data) => {
+          setCorporativo(data);
+          if (data.logo !== null) {
+            getLogo(data.logo);
+          }
+          if (data.horario !== null) {
+            getHorario(data.horario);
+          }
+        });
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const getLogo = async (key) => {
+    try {
+      const response = await downloadLogo(key);
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const imageUrl = URL.createObjectURL(blob); // Crea una URL para la imagen descargada
+        setLogoImg(imageUrl);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const getHorario = async (key) => {
+    try {
+      const response = await downloadHorario(key);
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const imageUrl = URL.createObjectURL(blob); // Crea una URL para la imagen descargada
+        setHorario(imageUrl);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  //Lista de imagenes de publiciddad
   const [publicidades, setPublicidades] = useState([]);
   useEffect(() => {
     listaPublicidades();
   }, []);
-  
 
   const listaPublicidades = async () => {
     try {
@@ -28,11 +101,9 @@ export const UserProvider = ({ children }) => {
           const imageUrl = await getImagenPublicidad(publicidad.foto);
           return { ...publicidad, url: imageUrl };
         })
-        
       );
 
       setPublicidades(newData);
-    
     } catch (error) {
       console.log(error);
     }
@@ -44,7 +115,7 @@ export const UserProvider = ({ children }) => {
       if (response.ok) {
         const blob = await response.blob();
         const imageUrl = URL.createObjectURL(blob); // Crea una URL para la imagen descargada
-        console.log(imageUrl);
+        //console.log(imageUrl);
 
         return imageUrl;
       }
@@ -52,14 +123,18 @@ export const UserProvider = ({ children }) => {
       console.log(error);
     }
   };
-  //modulo del usuario
+
+  /*
+      MODULOS 
+  */
+  //MODULO USUARIO
   const modulo = localStorage.getItem("modulo");
-  //Informacion del usuario para el perfil
+  //Informacion del usuario para el perfil (TODOS LOS MODULOS)
   const [usuario, setUsuario] = useState([]);
-  //Imagen de perfil del usuario
-  const [urlImagen, setUrlImagen] = useState(logoUser); // Puedes inicializarlo con el valor inicial de la imagen
+  //Imagen de perfil del usuario (TODOS LOS MODULOS)
+  const [urlImagen, setUrlImagen] = useState(logoUser); //(TODOS LOS MODULOS) Puedes inicializarlo con el valor inicial de la imagen
   //Si es cliente se verifica la membresia
-  const [membresiaActiva, setMembresiaActiva] = useState(false); // Puedes inicializarlo con el valor inicial de la imagen
+  const [membresiaActiva, setMembresiaActiva] = useState(false); // (MODULO )Puedes inicializarlo con el valor inicial de la imagen
   //Guarda el cliente
   const [cliente, setCliente] = useState([]);
   //Fecha Inicio
@@ -75,6 +150,10 @@ export const UserProvider = ({ children }) => {
   const [membresia, setMembresia] = useState([]);
   //Foto del entrenador
   const [fotoEntrenador, setFotoEntrenador] = useState(logoUser);
+  //Lista de ejercicios
+  const [ejercicios, setEjercicios] = useState([]);
+  //Lista de asistencia
+  const [asistencias, setAsistencias] = useState([]);
 
   useEffect(() => {
     if (modulo === "cliente") {
@@ -84,15 +163,48 @@ export const UserProvider = ({ children }) => {
       setUsuario(user);
     }
   }, [modulo]);
-  useEffect(() => {
-    if (membresiaActiva) {
-      buscarFechas();
-      verificarAsistencia();
-    }
-  }, [membresiaActiva]);
+
   useEffect(() => {
     if (usuario !== null) getImagenPerfil();
   }, [usuario]);
+
+  useEffect(() => {
+    if (membresiaActiva && modulo === "cliente") {
+      buscarFechas();
+      verificarAsistencia();
+      obtenerEntrenador();
+      listadoAsistencia();
+      listadoRutinas();
+      listadoEjercicios();
+    }
+  }, [modulo, membresiaActiva]);
+
+  useEffect(() => {
+    if (modulo === "admin" || modulo === "recepcionista") {
+      listadoClientes();
+    }
+    if(modulo === "recepcionista"){
+      listadoMembresias()
+    }
+  }, [modulo]);
+  
+
+  useEffect(() => {
+    if (modulo === "admin") {
+      listadoMembresias();
+      listadoUsuarios();
+      listadoRecepcionista();
+      listadoEntrenadores();
+    }
+  }, [modulo]);
+
+  useEffect(() => {
+    if (modulo !== null) {
+      obtenerDatos();
+      listadoRutinas();
+      listadoEjercicios();
+    }
+  }, [modulo]);
 
   const getCliente = async () => {
     let cedula = JSON.parse(localStorage.getItem("data")).cedula;
@@ -150,11 +262,6 @@ export const UserProvider = ({ children }) => {
     } catch (error) {}
   };
 
-  useEffect(() => {
-    if (membresiaActiva) {
-      obtenerEntrenador();
-    }
-  }, [membresiaActiva]);
   const obtenerEntrenador = () => {
     //setDownloading(true);
     // Obtener la fecha actual
@@ -178,11 +285,11 @@ export const UserProvider = ({ children }) => {
               .then((res) => res.blob())
               .then((blob) => {
                 const imageUrl = URL.createObjectURL(blob); // Crea una URL para la imagen descargada.
-               // console.log(imageUrl);
+                // console.log(imageUrl);
                 setFotoEntrenador(imageUrl);
               })
               .finally((f) => {
-               // setDownloading(false);
+                // setDownloading(false);
               });
           }
         })
@@ -192,9 +299,134 @@ export const UserProvider = ({ children }) => {
         });
     }
   };
+
+  const listadoAsistencia = () => {
+    listaAsistencia()
+      .then((response) => response.json())
+      .then((data) => {
+        setAsistencias(data.reverse());
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
+  const listadoEjercicios = () => {
+    listaEjercicios()
+      .then((response) => response.json())
+      .then((data) => {
+        setEjercicios(data);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
+
+  const [rutinas, setRutinas] = useState([]);
+  //Busco la lista de rutinas
+  const listadoRutinas = async () => {
+    listaRutinas()
+      .then((res) => res.json())
+      .then((data) => {
+        setRutinas(data);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
+  const [recepcionistas, setRecepcionistas] = useState([]);
+  const listadoRecepcionista = async () => {
+    try {
+      const response = await listaUsuarioRol(4);
+      const data = await response.json();
+
+      setRecepcionistas(data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const [entrenadores, setEntrenadores] = useState([]);
+  const listadoEntrenadores = async () => {
+    try {
+      const response = await listaUsuarioRol(3);
+      const data = await response.json();
+
+      setEntrenadores(data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const [membresias, setMembresias] = useState();
+  const listadoMembresias = async () => {
+    try {
+      const response = await listaMembresia();
+      const data = await response.json();
+
+      setMembresias(data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  //Lista de usuariosMembresias
+  const [usuariosMembresias, setUsuariosMembresias] = useState([]);
+  //Listado de usuariosMembresias
+  const listadoUsuarios = async () => {
+    try {
+      const response = await listaUsuarioMembresia();
+      const data = await response.json();
+      
+      setUsuariosMembresias(data.reverse());
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const [clientes, setClientes] = useState([]);
+  //LISTADO DE CLIENTES
+  const listadoClientes = async () => {
+    try {
+      const response = await listaUsuarioRol(2); // Asegúrate de que la función listaUsuarioRol esté definida
+      const data = await response.json();
+      setClientes(data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const [datos, setDatos] = useState([]);
+  const obtenerDatos = () => {
+    //setDownloading(true)
+    datosAsitencias()
+      .then((res) => res.json())
+      .then((data) => {
+        setDatos(data);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
   return (
     <UserContext.Provider
       value={{
+        corporativo,
+        setCorporativo,
+        logoImg,
+        setLogoImg,
+        horario,
+        setHorario,
+        datos,
+        setDatos,
+        membresias,
+        setMembresias,
+        clientes,
+        setClientes,
+        usuariosMembresias,
+        setUsuariosMembresias,
+        rutinas,
+        setRutinas,
+        recepcionistas,
+        setRecepcionistas,
+        entrenadores,
+        setEntrenadores,
         publicidades,
         setPublicidades,
         urlImagen,
@@ -218,7 +450,11 @@ export const UserProvider = ({ children }) => {
         membresia,
         setMembresia,
         fotoEntrenador,
-        setFotoEntrenador
+        setFotoEntrenador,
+        setAsistencias,
+        asistencias,
+        ejercicios,
+        setEjercicios,
       }}
     >
       {children}

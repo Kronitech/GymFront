@@ -3,14 +3,11 @@ import React from "react";
 import {
   Card,
   CardHeader,
-  CardTitle,
   Container,
   Row,
   Col,
   CardBody,
-  Media,
   Button,
-  Table,
   FormGroup,
   Label,
   Input,
@@ -33,10 +30,12 @@ import "../../../assets/css/spinner.css";
 import Swal from "sweetalert2";
 import { sendEmailNuevoUsuario } from "../../../api/Membresia/Membresia";
 import SpinnerGrupo from "../../../components/Sppiner";
+import { useUserContext } from "../../../components/Context/UserContext";
 
 const Recepcionista = () => {
-  const[loading,setLoading]=useState([])
-  const [recepcionistas, setRecepcionistas] = useState([]);
+  const[loading,setLoading]=useState(false)
+
+  const {recepcionistas, setRecepcionistas} = useUserContext();
   const [recepcionista, setRecepcionista] = useState([]);
   const [filtro, setFiltro] = useState("");
   //Activar spinner
@@ -54,6 +53,7 @@ const Recepcionista = () => {
   };
   const listado = async () => {
     try {
+      setLoading(true)
       const response = await listaUsuarioRol(4);
       const data = await response.json();
       setLoading(false)
@@ -62,9 +62,9 @@ const Recepcionista = () => {
       console.log(error);
     }
   };
-  useEffect(() => {
-    listado();
-  }, []);
+  // useEffect(() => {
+  //   listado();
+  // }, []);
 
   const columns = [
     {
@@ -514,6 +514,7 @@ const Recepcionista = () => {
                           value={recepcionista.cedula}
                           onChange={handleChange}
                           required
+                          disabled
                         />
                       </FormGroup>
                     </Col>

@@ -32,6 +32,24 @@
     }
   }
 
+  @keyframes parpadeo {
+    0% {
+      border-color: #1eff00; /* Color del borde al inicio */
+    }
+    50% {
+      border-color: #ffffff; /* Color del borde a la mitad de la animación */
+    }
+    100% {
+      border-color: #00ff15; /* Color del borde al final */
+    }
+  }
+  
+  .bordesCard {
+    border:  solid rgb(0, 109, 33); /* Color del borde inicial */
+    /* Puedes ajustar este valor según tu diseño */
+    animation: parpadeo 1s infinite; /* La animación dura 1 segundo y se repite infinitamente */
+  }
+  
   
 
   

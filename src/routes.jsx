@@ -13,7 +13,7 @@ import Membresia from "./view/Admin/Membresias/Membresia";
 import Rutinas from "./view/Admin/Rutinas/Runitas";
 import Index from "./view/Index/Index";
 import EntrenadorUsuarios from "./view/Entrenador/index"
-import Publicidad from "./view/Admin/Publicidad/Publicidad" 
+import Corporativo from "./view/Admin/Corporativo/Corporativo" 
 import ClienteRutinas from "./view/Client/Rutinas"
 import ClienteEjercicios from "./view/Client/Ejercicios"
 import ClienteEntrenamientos from "./view/Client/Entrenamiento"
@@ -72,6 +72,14 @@ var routes = [
     layout: "/admin",
   },
   {
+    path: "/corporativo",
+    name: "Corporativo",
+    
+    icon: "fa fa-building text-dark",
+    component: <Corporativo />,
+    layout: "/admin",
+  },
+  {
     path: "/perfil",
     name: "Perfil",
     icon:"",
@@ -99,13 +107,7 @@ var routes = [
     component: <Rutinas />,
     layout: "/admin",
   },
-  {
-    path: "/publicidad",
-    name: "Publicidad",
-    icon: "fa fa-camera-retro text-dark",
-    component: <Publicidad />,
-    layout: "/admin",
-  },
+  
   {
     path: "/index",
     name: "Inicio",

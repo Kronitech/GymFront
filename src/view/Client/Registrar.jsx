@@ -22,7 +22,9 @@ import { listaRutinas } from "../../api/Rutinas/Rutinas";
 import { saveEntrenamiento } from "../../api/Asistencias/Entrenamiento";
 import { useParams } from "react-router-dom";
 import "../../assets/css/spinner.css";
+
 const Entrenamientos = () => {
+ 
   const [downloading, setDownloading] = useState(false);
   const navigate = useNavigate();
   const { id } = useParams();
@@ -92,7 +94,7 @@ const Entrenamientos = () => {
         console.log(err);
       })
       .finally(f=>{
-        navigate("/cliente/entrenamientos");
+        navigate("/cliente/entrenamientos?save=yes");
         setDownloading(false)
       })
             

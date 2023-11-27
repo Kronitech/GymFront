@@ -3,14 +3,11 @@ import React from "react";
 import {
   Card,
   CardHeader,
-  CardTitle,
   Container,
   Row,
   Col,
   CardBody,
-  Media,
   Button,
-  Table,
   FormGroup,
   Label,
   Input,
@@ -34,11 +31,12 @@ import Swal from "sweetalert2";
 import { sendEmailNuevoUsuario } from "../../../api/Membresia/Membresia";
 import SpinnerGrupo from "../../../components/Sppiner";
 import { MagicMotion } from "react-magic-motion";
+import { useUserContext } from "../../../components/Context/UserContext";
 
 
 const Entrenador = () => {
-  const [loading,setLoading]=useState(true)
-  const [entrenadores, setEntrenadores] = useState([]);
+  const [loading,setLoading]=useState(false)
+  const {entrenadores, setEntrenadores} = useUserContext();
   const [filtro, setFiltro] = useState("");
   //Activar spinner
   const [downloading, setDownloading] = useState(false);
@@ -81,9 +79,9 @@ const Entrenador = () => {
     setEntrenador((prevEntrenador) => ({ ...prevEntrenador, [name]: value }));
   };
 
-  useEffect(() => {
-    listado();
-  }, []);
+  // useEffect(() => {
+  //   listado();
+  // }, []);
 //Registrar entrenador
   const registrarEntrenador = (e) => {
     e.preventDefault();
@@ -520,6 +518,7 @@ const Entrenador = () => {
                           value={entrenador.cedula}
                           onChange={handleChange}
                           required
+                          disabled
                         />
                       </FormGroup>
                     </Col>

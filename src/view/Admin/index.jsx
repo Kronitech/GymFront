@@ -10,11 +10,7 @@ import {
   Container,
   Modal,
   CardFooter,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
   Table,
-  Progress,
   Input,
   FormGroup,
   Label,
@@ -29,18 +25,13 @@ import { useUserContext } from "../../components/Context/UserContext";
 import {
   asitenciaRegistrada,
   datosAsitencias,
+  listaAsistencia,
   saveAsitencia,
 } from "../../api/Asistencias/Asistencia";
 import "../../assets/css/spinner.css";
 
 const Index = () => {
-  //Obtener datos de la grafica de asistencia
-  useEffect(() => {
-    obtenerDatos();
-  }, []);
-  const [datos, setDatos] = useState([]);
-  //Cargando datos
-  const [sleep, setSleep] = useState(true);
+  const [sleep, setSleep] = useState(false);
   const obtenerDatos = () => {
     //setDownloading(true)
     datosAsitencias()
@@ -63,18 +54,20 @@ const Index = () => {
     setModal(!modal);
   };
   // Estado para almacenar la hora seleccionada
-  //const [asistenciaSeleccionada, setAsistenciaSeleccionada] = useState(false);
   const modulo = localStorage.getItem("modulo");
   const {
     membresiaActiva,
-    setMembresiaActiva,
     cliente,
-    setCliente,
     fechaInicio,
     fechaFin,
     asistenciaSeleccionada,
     setAsistenciaSeleccionada,
     time,
+    datos,
+    setDatos,
+    asistencias,
+    setAsistencias,
+    usuario,
   } = useUserContext();
 
   useEffect(() => {
@@ -145,12 +138,25 @@ const Index = () => {
       saveAsitencia(asistencia)
         .then((res) => res.json())
         .then((data) => {
+          listadoAsistencia();
+          obtenerDatos();
           setAsistenciaSeleccionada(true);
         })
         .catch((err) => {
           console.log(err);
         });
     }
+  };
+
+  const listadoAsistencia = () => {
+    listaAsistencia()
+      .then((response) => response.json())
+      .then((data) => {
+        setAsistencias(data.reverse());
+      })
+      .catch((error) => {
+        console.log(error);
+      });
   };
 
   const verificarAsistencia = () => {
@@ -175,23 +181,53 @@ const Index = () => {
     // Convierte la diferencia en días
     const diferenciaEnDias = diferenciaEnMilisegundos / (1000 * 60 * 60 * 24);
 
-    return Math.abs(Math.round(diferenciaEnDias)); // Usamos Math.abs para asegurarnos de que la diferencia sea positiva
+    return Math.abs(Math.round(diferenciaEnDias)) + 1; // Usamos Math.abs para asegurarnos de que la diferencia sea positiva
   };
 
   useEffect(() => {
-    if(cliente!==null){
+    if (cliente !== null) {
       mostrarAlerta();
     }
-    
   }, [cliente]);
   const mostrarAlerta = () => {
-    
     let dias = calcularDiferenciaEnDias(fechaFin?.fechaFin);
     if (Number(dias) <= 7) {
       toggle();
     }
   };
 
+  const [horaActual, setHoraActual] = useState("");
+
+  useEffect(() => {
+    // Función para obtener la hora actual con formato de 12 horas
+    const obtenerHoraActual = () => {
+      const ahora = new Date();
+      let horas = ahora.getHours();
+      const minutos = ahora.getMinutes();
+      const segundos = ahora.getSeconds();
+      const ampm = horas >= 12 ? "PM" : "AM";
+
+      // Convertir a formato de 12 horas
+      horas = horas % 12 || 12;
+
+      const horaFormateada = `${agregarCero(horas)}:${agregarCero(
+        minutos
+      )}:${agregarCero(segundos)} ${ampm}`;
+      setHoraActual(horaFormateada);
+    };
+
+    // Llama a la función inicialmente y configura un intervalo para actualizar la hora cada segundo
+    obtenerHoraActual();
+    const intervalo = setInterval(obtenerHoraActual, 1000);
+
+    // Limpia el intervalo al desmontar el componente
+    return () => clearInterval(intervalo);
+  }, []);
+
+  // Función para agregar un cero delante de un número si es necesario (para el formato HH:MM:SS)
+  const agregarCero = (numero) => {
+    return numero < 10 ? `0${numero}` : numero;
+  };
   return (
     <>
       <Header />
@@ -257,6 +293,35 @@ const Index = () => {
               </Card>
             )}
           </>
+        )}
+        {modulo !== null && modulo !== "cliente" && (
+          <Card className="my-2 text-justify ">
+            <CardBody>
+              <Row>
+                <div className="col">
+                  <>
+                    <p className="text-primary h2">
+                      ¡Bienvenido al Módulo {modulo.toUpperCase()}!
+                      <i
+                        className="fa fa-check-circle fa-1x"
+                        aria-hidden="true"
+                      ></i>{" "}
+                    </p>
+                    <p> Es un placer tenerte aquí Estimado {usuario.nombre},</p>
+                  </>
+                </div>
+                <div className="col text-right ">
+                  <Button
+                    className="my-0 text-white"
+                    type="button"
+                    color="default"
+                  >
+                    {horaActual}
+                  </Button>
+                </div>
+              </Row>
+            </CardBody>
+          </Card>
         )}
 
         <Row>
@@ -426,9 +491,7 @@ const Index = () => {
               <div
                 className="text-muted text-center mt-2 mb-3"
                 style={{ flex: 1, textAlign: "center" }}
-              >
-             
-              </div>
+              ></div>
               <button
                 className="btn btn-close text-white"
                 style={{
@@ -443,13 +506,18 @@ const Index = () => {
 
             <CardBody className="px-lg-3 py-lg-2 ">
               <div className="py-3 text-center">
-              <i className="fa fa-bell fa-3x" aria-hidden="true" /> 
+                <i className="fa fa-bell fa-3x" aria-hidden="true" />
                 <h1 className="heading mt-4 text-white h1">
                   ¡Tu membresía está por expirar!
                 </h1>
                 <p>
-                Quedan solo <small className="fw-bold h3 text-white"> ' {calcularDiferenciaEnDias(fechaFin?.fechaFin)} '</small> días para que tu membresía expire. Asegúrate de
-                  renovarla para seguir disfrutando de nuestros servicios.
+                  Quedan solo{" "}
+                  <small className="fw-bold h3 text-white">
+                    {" "}
+                    ' {calcularDiferenciaEnDias(fechaFin?.fechaFin)} '
+                  </small>{" "}
+                  días para que tu membresía expire. Asegúrate de renovarla para
+                  seguir disfrutando de nuestros servicios.
                 </p>
               </div>
             </CardBody>

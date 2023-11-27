@@ -60,11 +60,12 @@ import {
 } from "../../../api/Rutinas/Rutinas";
 import SpinnerGrupo from "../../../components/Sppiner";
 import { MagicTabSelect } from "react-magic-motion";
+import { useUserContext } from "../../../components/Context/UserContext";
 
 const Rutinas = () => {
   //Menu
-  const [loading, setLoading] = useState(true);
-  const [loading2, setLoading2] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [loading2, setLoading2] = useState(false);
   const [loading3, setLoading3] = useState(true);
   const [tabs, setTabs] = useState(1);
   const toggleNavs = (index) => {
@@ -102,7 +103,28 @@ const Rutinas = () => {
       sortable: true,
       wrap: true,
     },
-
+    {
+      name: "Cantidad",
+      cell: (row) => row.cantidad,
+      selector: (row) => row.cantidad,
+      sortable: true,
+      wrap: true,
+    },
+    {
+      name: "Disponibilidad",
+      cell: (row) => (
+        <>
+          {row.disponibilidad ? (
+            <i class="fa fa-check-circle text-success fw-bold"></i>
+          ) : (
+            <i class="fa fa-exclamation-triangle text-danger fw-bold"></i>
+          )}
+        </>
+      ),
+      selector: (row) => row.disponibilidad,
+      sortable: true,
+      wrap: true,
+    },
     {
       name: "Acciones",
       cell: (row) => (
@@ -135,9 +157,16 @@ const Rutinas = () => {
     setDownloading(true);
     const formData = new FormData(e.target);
     const nombre = formData.get("nombre").toUpperCase();
-
+    const cantidad= formData.get("cantidad")
+    const check=formData.get("disponibilidad")
+    let  disponibilidad=false
+    if(check==="on"){
+      disponibilidad=true
+    }
     const equipameintoNew = {
       nombre,
+      cantidad,
+      disponibilidad
     };
     saveEquipamiento(equipameintoNew)
       .then((response) => response.json())
@@ -164,43 +193,78 @@ const Rutinas = () => {
         console.log(error);
       });
   };
-  //Actualizar Equipamiento
-  const actualizarEquipamiento = async (equipameinto) => {
-    const { value: nombre } = await Swal.fire({
+  // ACTUALIZAR EQUIPAMIENTO
+  const actualizarEquipamiento = async (equipamiento) => {
+    const { value: formValues } = await Swal.fire({
       title: "Actualizar Equipamiento",
-      input: "text",
-      inputLabel: "Nombre actual: " + equipameinto.nombre,
-      inputPlaceholder: "Ingresa el nombre nuevo",
-      showCancelButton: true, // Muestra el botón de cancelar
+      html:
+        `<label for="swal-nombre" class="swal2-input-label">Nombre actual: ${equipamiento.nombre}</label>` +
+        `<input id="swal-nombre" class="swal2-input" placeholder="Ingresa el nombre nuevo" value="${equipamiento.nombre}">` +
+        `<label for="swal-cantidad" class="swal2-input-label">Cantidad actual: ${equipamiento.cantidad}</label>` +
+        `<input id="swal-cantidad" class="swal2-input" placeholder="Ingresa la nueva cantidad" type="number" value="${equipamiento.cantidad}">` +
+        `<label for="swal-disponibilidad" class="swal2-input-label">Disponibilidad actual: ${
+          equipamiento.disponibilidad ? "Disponible" : "No Disponible"
+        }</label>` +
+        `<input id="swal-disponibilidad" class="swal2-checkbox" type="checkbox" ${
+          equipamiento.disponibilidad ? "checked" : ""
+        }>`,
+      focusConfirm: false,
+      preConfirm: () => {
+        return {
+          nombre: document.getElementById("swal-nombre").value,
+          cantidad: parseInt(
+            document.getElementById("swal-cantidad").value,
+            10
+          ),
+          disponibilidad: document.getElementById("swal-disponibilidad")
+            .checked,
+        };
+      },
+      showCancelButton: true,
     });
 
-    if (nombre) {
+    if (
+      formValues &&
+      (formValues.nombre || formValues.cantidad !== undefined)
+    ) {
       setDownloading(true);
-      const equipameintoNew = {
-        id: equipameinto.id,
-        nombre,
+      const equipamientoNew = {
+        id: equipamiento.id,
+        nombre: formValues.nombre || equipamiento.nombre,
+        cantidad:
+          formValues.cantidad !== undefined
+            ? parseInt(formValues.cantidad, 10)
+            : equipamiento.cantidad,
+        disponibilidad: formValues.disponibilidad,
       };
-      updateEquipamiento(equipameintoNew).then((response) => {
-        if (response.ok) {
-          setDownloading(false);
-          listadoEquipamiento();
-          Swal.fire(`Nombre se  actualizo a : ${nombre}`);
-        } else {
-          setDownloading(false);
-        }
-      });
+      if (equipamientoNew.cantidad > 0) {
+        updateEquipamiento(equipamientoNew).then((response) => {
+          if (response.ok) {
+            setDownloading(false);
+            listadoEquipamiento();
+            Swal.fire(`Equipamiento actualizado`);
+          } else {
+            setDownloading(false);
+          }
+        });
+      } else {
+        setDownloading(false);
+        Swal.fire(`La cantidad debe ser mayor que 0`);
+      }
     }
   };
 
   //----------------------------------------------------------------------------------------------------
   // ----EJERCICIOS ------------------------------------------------------------------------------------
   //Lista de ejercicios
-  const [ejercicios, setEjercicios] = useState([]);
+  const { ejercicios, setEjercicios, rutinas, setRutinas } = useUserContext();
+  // const [ejercicios, setEjercicios] = useState([]);
   const [filtroEjercicio, setFiltroEjercicio] = useState("");
-  useEffect(() => {
-    listadoEjercicios();
-  }, []);
+  // useEffect(() => {
+  //   listadoEjercicios();
+  // }, []);
   const listadoEjercicios = () => {
+    setLoading2(true);
     listaEjercicios()
       .then((response) => response.json())
       .then((data) => {
@@ -209,6 +273,7 @@ const Rutinas = () => {
       })
       .catch((error) => {
         console.log(error);
+        setLoading2(false);
       });
   };
   //Filtro de la tabla
@@ -290,6 +355,7 @@ const Rutinas = () => {
   const registrarEjercicio = (e) => {
     e.preventDefault();
     setDownloading(true);
+
     saveEjercicio(ejercicio)
       .then((response) => response.json())
       .then((data) => {
@@ -359,6 +425,7 @@ const Rutinas = () => {
   //Actualizar ejercicio
   const actualizarEjercicio = (e) => {
     e.preventDefault();
+    setDownloading(true);
     updateEjercicio(ejercicio)
       .then((res) => res.json())
       .then((data) => {
@@ -388,22 +455,24 @@ const Rutinas = () => {
   #######---RUTINAS----------#################################################################3#######
   */
   //Lista de rutinas
-  const [rutinas, setRuntinas] = useState([]);
+  //const [rutinas, setRuntinas] = useState([]);
 
-  useEffect(() => {
-    listadoRutinas();
-  }, []);
+  // useEffect(() => {
+  //   listadoRutinas();
+  // }, []);
 
   //Busco la lista de rutinas
   const listadoRutinas = async () => {
+    setLoading(true);
     listaRutinas()
       .then((res) => res.json())
       .then((data) => {
-        setRuntinas(data);
+        setRutinas(data);
         setLoading(false);
       })
       .catch((error) => {
         console.log(error);
+        setLoading(false);
       });
   };
   const [filtroRutina, setFiltroRutina] = useState("");
@@ -484,7 +553,7 @@ const Rutinas = () => {
   const handleOpcionesRutina = (rutina) => {
     toggleRutinaUpdate();
     setRutina(rutina);
-    
+
     setTimeout(() => {
       rutina.ejercicios?.forEach((ejercicio) => {
         const input = document.getElementById(`ejercicio-${ejercicio.id}`);
@@ -730,7 +799,7 @@ const Rutinas = () => {
                                         <div className="col text-right">
                                           <Link title="Actualizar">
                                             <Button
-                                            className="fw-bold h2"
+                                              className="fw-bold h2"
                                               color="primary"
                                               type="submit"
                                               onClick={() =>
@@ -880,7 +949,7 @@ const Rutinas = () => {
                                         <div className="col text-right">
                                           <Link title="Actualizar">
                                             <Button
-                                            className="fw-bold h2"
+                                              className="fw-bold h2"
                                               color="primary"
                                               type="submit"
                                               onClick={() =>
@@ -995,25 +1064,66 @@ const Rutinas = () => {
                               <hr />
                               <Form onSubmit={guardarEquipamiento}>
                                 <Row className="text-center">
-                                  <Col sm="4">
-                                    <Label
-                                      for="filtro"
-                                      className="form-control-label text-primary"
-                                    >
-                                      Nombre :
-                                    </Label>
+                                  <Col sm="6">
+                                    <FormGroup>
+                                      <Label
+                                        for="filtro"
+                                        className="form-control-label text-primary"
+                                      >
+                                        Nombre 
+                                      </Label>
+                                      <Input
+                                        type="text"
+                                        className="text-dark fw-bold text-center"
+                                        placeholder="Ingrese el nombre del equipamiento"
+                                        name="nombre"
+                                        id="nombre"
+                                        required
+                                      />
+                                    </FormGroup>
                                   </Col>
-                                  <Col sm="4">
-                                    <Input
-                                      type="text"
-                                      className="text-dark fw-bold"
-                                      placeholder="Ingrese el Nombre equipamiento"
-                                      name="nombre"
-                                      id="nombre"
-                                      required
-                                    />
+
+                                  <Col lg="6">
+                                    <FormGroup>
+                                      <label
+                                        className="form-control-label text-primary"
+                                        htmlFor="input-first-name"
+                                      >
+                                        Cantidad 
+                                      </label>
+                                      <Input
+                                        className=" fw-bold text-center text-dark"
+                                        id="cantidad"
+                                        name="cantidad"
+                                        placeholder="Ingrese la cantidad"
+                                        type="text"
+                                        required
+                                      />
+                                    </FormGroup>
                                   </Col>
-                                  <Col sm="4">
+                                  <Col lg="12" >
+                                  <label
+                                        className="form-control-label text-primary"
+                                        htmlFor="input-first-name"
+                                      >
+                                        Disponibilidad de los equipos?
+                                      </label>
+                                    <FormGroup check className="text-center ">
+                                    
+                                      <Label check className="text-center mt-3">
+                                        <Input
+                                       
+                                          type="checkbox"
+                                          name="disponibilidad"
+                                          id="disponibilidad"
+                                        />{" "}
+                                        Disponible
+                                      </Label>
+                                    </FormGroup>
+                                                <hr />
+                                  </Col>
+                                  
+                                  <Col sm="12" className="mt-3">
                                     <Button color="primary" type="submit">
                                       GUARDAR
                                     </Button>

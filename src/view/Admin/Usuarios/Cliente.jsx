@@ -38,15 +38,18 @@ import {
   usuarioMembresiaByCedula,
   saveUsuarioMembresia,
   sendEmailNuevoUsuario,
+  listaUsuarioMembresia,
 } from "../../../api/Membresia/Membresia";
 import { saveCliente } from "../../../api/Registro/Cliente";
 import SpinnerGrupo from "../../../components/Sppiner";
+import { useUserContext } from "../../../components/Context/UserContext";
+import { downloadPdfComprobante, sendEmailComprobante } from "../../../api/Membresia/Comprobante";
 
 const Cliente = () => {
+  const{ membresias,setMembresias,clientes,setClientes,setUsuariosMembresias,usuariosMembresias}=useUserContext();
   const [tabs, setTabs] = useState(1);
-  const [clientes, setClientes] = useState([]);
+  //const [clientes, setClientes] = useState([]);
   const [filtro, setFiltro] = useState("");
-  const [membresias, setMembresias] = useState([]);
   const [cedula, setCedula] = useState("");
   const [usuarioMembresia, setUsuarioMembresia] = useState([]);
   const [existeUsuario, setExisteUsuario] = useState(false);
@@ -54,7 +57,7 @@ const Cliente = () => {
   const [selectedMembresia, setSelectedMembresia] = useState(null);
   const [color, setColor] = useState("primary");
   const [ocultarBoton, setOcultarBoton] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [cliente, setCliente] = useState([]);
   //MODAL CLIENTE
   const [modal, setModal] = useState(false);
@@ -111,31 +114,35 @@ const Cliente = () => {
   //LISTADO DE CLIENTES
   const listado = async () => {
     try {
+      setLoading(true);
       const response = await listaUsuarioRol(2); // Asegúrate de que la función listaUsuarioRol esté definida
       const data = await response.json();
       setClientes(data);
       setLoading(false);
+      
     } catch (error) {
       console.log(error);
     }
   };
-  // LISTADO DE MEMBRESIAS ACTIVAS
-  const listadoMembresias = async () => {
+  //Listado de usuariosMembresias
+  const listadoUsuarios = async () => {
     try {
-      const response = await listaMembresia();
+      const response = await listaUsuarioMembresia();
       const data = await response.json();
-      setMembresias(data);
+      console.log(data)
+      setUsuariosMembresias(data.reverse());
     } catch (error) {
       console.log(error);
     }
   };
 
-  useEffect(() => {
-    listado();
-  }, []);
-  useEffect(() => {
-    listadoMembresias();
-  }, []);
+
+  // useEffect(() => {
+  //   listado();
+  // }, []);
+  // useEffect(() => {
+  //   listadoMembresias();
+  // }, []);
 
   //Columnas de la Datatable
   const columns = [
@@ -246,6 +253,7 @@ const Cliente = () => {
       //CLIENTES ANTIGUOS
       if (existeUsuario) {
         usuarioMembresiaSave(usuarioMembresia.usuario.id);
+        
       } else {
         //CLIENTES NUEVOS
         const formData = new FormData(e.target);
@@ -268,6 +276,7 @@ const Cliente = () => {
             usuarioMembresiaSave(data.id);
             listado();
             sendEmail(data.id);
+           
           })
           .catch((err) => {
             Swal.fire({
@@ -278,8 +287,45 @@ const Cliente = () => {
             });
           });
       }
+      
     } catch (error) {}
   };
+//Enviar email con comprobante de pago
+
+  const enviarComprobante =(id)=>{
+    sendEmailComprobante(id)
+    .then(res=>res.json())
+    .then(data=>{
+      console.log(data)
+    })
+    .catch(error=>{
+      console.log(error)
+    })
+  }
+  //Descargar pdf 
+  const descargarComprobante=(id)=>{
+    setDownloading(true)
+    downloadPdfComprobante(id)
+    .then((res) => res.blob())
+      .then((blob) => {
+        setDownloading(false);
+        if (blob.size === 0) {
+          alert("No hay membresias vendidas en ese rango de fechas");
+        } else {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "comprobantePago.pdf";
+          document.body.appendChild(a);
+          a.click();
+          
+        }
+      })
+      .catch((e) => {
+        setDownloading(false);
+        console.log(e);
+      });
+  }
   //GUARDAR USUARIO MEMBRESIA
   const usuarioMembresiaSave = async (usuarioId) => {
     setDownloading(true);
@@ -298,6 +344,9 @@ const Cliente = () => {
     saveUsuarioMembresia(userMembresia)
       .then((response) => response.json())
       .then((data) => {
+        console.log(data)
+        enviarComprobante(data.id)
+        listadoUsuarios()
         Swal.fire({
           icon: "success",
           title: "¡Completado!",
@@ -699,27 +748,23 @@ const Cliente = () => {
                                 {membresias ? (
                                   <>
                                     {membresias.map((membresia) => (
-                                      <Col lg="6" xl="4" key={membresia.id}>
+                                      <Col lg="6" xl="5" key={membresia.id}>
                                         <Card
-                                          className={`card-stats mb-4 mb-xl-0 border ${
-                                            selectedMembresia === membresia.id
-                                              ? "selected"
-                                              : ""
-                                          }`}
+                                          className=""
                                           color="dark"
                                           outline
                                         >
                                           <CardBody>
                                             <Row>
                                               <Link className="text-dark ">
-                                                <Col className="col-auto">
+                                                <Col className="col-auto  ">
                                                   <div
                                                     className={`icon icon-shape ${
                                                       selectedMembresia ===
                                                       membresia.id
-                                                        ? "bg-success"
+                                                        ? "bg-success bordesCard"
                                                         : "bg-danger"
-                                                    } text-white rounded-circle shadow`}
+                                                    } text-white rounded-circle shadow  `}
                                                   >
                                                     <i className="fa fa-credit-card-alt" />
                                                   </div>
@@ -748,9 +793,9 @@ const Cliente = () => {
                                               </div>
                                             </Row>
                                             <br />
-                                            <div className="custom-control custom-radio mb-3">
+                                            <div className="custom-control custom-radio mb-3 mt-3">
                                               <input
-                                                className="custom-control-input  text-dark fw-bold h3"
+                                                className="custom-control-input  text-dark fw-bold h1"
                                                 id={membresia.id}
                                                 name="custom-radio-2"
                                                 type="radio"
@@ -763,7 +808,7 @@ const Cliente = () => {
                                                 required
                                               />
                                               <label
-                                                className="custom-control-label"
+                                                className="custom-control-label "
                                                 htmlFor={membresia.id}
                                               >
                                                 {membresia.nombre}
@@ -961,6 +1006,7 @@ const Cliente = () => {
                           value={cliente.cedula}
                           onChange={handleChange}
                           required
+                          disabled
                         />
                       </FormGroup>
                     </Col>

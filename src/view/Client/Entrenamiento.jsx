@@ -15,25 +15,40 @@ import {
   FormGroup,
   Input,
 } from "reactstrap";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import Header from "../../components/Headers/Header";
 import { listaEjercicios } from "../../api/Rutinas/Ejercicios";
 import { listaAsistencia } from "../../api/Asistencias/Asistencia";
-
-
+import { useUserContext } from "../../components/Context/UserContext";
 
 const Entrenamientos = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const params = new URLSearchParams(location.search);
+  const saveParam = params.get("save");
+  
+  useEffect(() => {
+    if (saveParam) {
+      setLoading(true);
+      listadoAsistencia();
+      // Después de utilizar el parámetro, elimínalo de la URL
+      // Después de utilizar el parámetro, elimínalo de la URL
+      const newSearchParams = new URLSearchParams(location.search);
+      newSearchParams.delete("save");
+      navigate(`?${newSearchParams.toString()}`, { replace: true });
+    }
+  }, [saveParam, navigate, location.pathname, location.search]);
   /*
     #######---Ejercicios----------#################################################################3#######
     */
 
   //Lista de asistencia
-  const [loading, setLoading] = useState([]);
-  const [asistencias, setAsistencias] = useState([]);
-  
-  useEffect(() => {
-    listadoAsistencia();
-  }, []);
+  const [loading, setLoading] = useState(false);
+  //const [asistencias, setAsistencias] = useState([]);
+
+  // useEffect(() => {
+  //   listadoAsistencia();
+  // }, []);
   const listadoAsistencia = () => {
     listaAsistencia()
       .then((response) => response.json())
@@ -46,15 +61,15 @@ const Entrenamientos = () => {
       });
   };
   //Lista de ejercicios
-  const [ejercicios, setEjercicios] = useState([]);
+  // const [ejercicios, setEjercicios] = useState([]);
   const [filtroAsistencia, setFiltroAsistencia] = useState("");
-
+  const { asistencias, setAsistencias, ejercicios, setEjercicios } =
+    useUserContext();
   const listadoEjercicios = () => {
     listaEjercicios()
       .then((response) => response.json())
       .then((data) => {
         setEjercicios(data);
-        
       })
       .catch((error) => {
         console.log(error);
@@ -145,9 +160,9 @@ const Entrenamientos = () => {
     },
   ];
 
-  useEffect(() => {
-    listadoEjercicios();
-  }, []);
+  // useEffect(() => {
+  //   listadoEjercicios();
+  // }, []);
 
   const retornaEjercicioPorId = (id, status) => {
     const ejercicioEncontrado = ejercicios.find(

@@ -19,31 +19,32 @@ import { Link } from "react-router-dom";
 import Header from "../../components/Headers/Header";
 import { listaRutinas } from "../../api/Rutinas/Rutinas";
 import SpinnerGrupo from "../../components/Sppiner";
+import { useUserContext } from "../../components/Context/UserContext";
 
 const Rutinas = () => {
   /*
     #######---RUTINAS----------#################################################################3#######
     */
   //Lista de rutinas
-  const [loading, setLoading] = useState(true);
-  const [rutinas, setRuntinas] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const {rutinas,setRutinas}=useUserContext()
 
-  useEffect(() => {
-    listadoRutinas();
-  }, []);
+  // useEffect(() => {
+  //   listadoRutinas();
+  // }, []);
 
-  //Busco la lista de rutinas
-  const listadoRutinas = async () => {
-    listaRutinas()
-      .then((res) => res.json())
-      .then((data) => {
-        setLoading(false);
-        setRuntinas(data);
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  };
+  // //Busco la lista de rutinas
+  // const listadoRutinas = async () => {
+  //   listaRutinas()
+  //     .then((res) => res.json())
+  //     .then((data) => {
+  //       setLoading(false);
+  //       setRuntinas(data);
+  //     })
+  //     .catch((error) => {
+  //       console.log(error);
+  //     });
+  // };
   const [filtroRutina, setFiltroRutina] = useState("");
   //Filtro de la tabla
   const filtroRutinas = rutinas.filter(

@@ -14,17 +14,19 @@ import {
   Col,
 
 } from "reactstrap";
-import logo from "../../assets/img/brand/logo.svg";
+//import logo from "../../assets/img/brand/logo.svg";
+import { useUserContext } from "../Context/UserContext";
 
 const AdminNavbar = () => {
+  const {logoImg}=useUserContext();
   return (
     <>
       <Navbar className="navbar-top navbar-horizontal navbar-dark " expand="md">
         <Container className="px-4">
           <NavbarBrand to="/" tag={Link}>
-            <img
-              alt="..."
-              src={logo}
+          <img
+              alt="Cargando..."
+              src={logoImg}
             />
           </NavbarBrand>
           <button className="navbar-toggler" id="navbar-collapse-main">
@@ -34,10 +36,10 @@ const AdminNavbar = () => {
             <div className="navbar-collapse-header d-md-none">
               <Row>
                 <Col className="collapse-brand" xs="6">
-                  <Link to="/">
+                  <Link to="/auth/index">
                     <img
                       alt="..."
-                      src={logo}
+                      src={logoImg}
                     />
                   </Link>
                 </Col>
@@ -51,18 +53,18 @@ const AdminNavbar = () => {
             </div>
             <Nav className="ml-auto" navbar>
               <NavItem>
-                <NavLink className="nav-link-icon" to="/" tag={Link}>
+                <NavLink className="nav-link-icon" to="/auth/index" tag={Link}>
                   <i className="fa fa-home" />
-                  <span className="nav-link-inner--text">Inicio</span>
+                  <span className="nav-link-inner--text">Home</span>
                 </NavLink>
               </NavItem>
-              <NavItem>
+              {/* <NavItem>
                 <NavLink className="nav-link-icon" tag={Link}
                 to="/auth/login?modulo=admin">
                   <i className="fa fa-building" />
                   <span className="nav-link-inner--text">Corporativo</span>
                 </NavLink>
-              </NavItem>
+              </NavItem> */}
               <NavItem>
                 <NavLink
                   className="nav-link-icon"

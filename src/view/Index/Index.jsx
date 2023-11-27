@@ -23,15 +23,12 @@ import ChartComponent from "../../components/Carousel/Charts";
 import { datosAsitencias, } from "../../api/Asistencias/Asistencia";
 import "../../assets/css/spinner.css";
 import { useTransition, animated } from "@react-spring/web";
-import horario from "../../assets/img/carrusel/horario.jpg";
+import horarioPrev from "../../assets/img/carrusel/horario.jpg";
 import "../../assets/css/mensaje.css"
 
 import Slider from "react-slick";
 import { FaWhatsapp } from "react-icons/fa";
-import {
-  downloadImagenPublicidad,
-  listaImagenPublicidad,
-} from "../../api/Publicidad/Publicidad";
+
 import { useUserContext } from "../../components/Context/UserContext";
 
 const Index = () => {
@@ -39,8 +36,10 @@ const Index = () => {
   
   const {
     publicidades,
-    setPublicicidades
+    horario
+    
   }=useUserContext();
+
   return (
     <>
       <Container>
@@ -53,7 +52,13 @@ const Index = () => {
 
         <Row>
           <Col md="6" className="mt-3">
-            <img src={horario} alt="..." className="responsive"  />
+            { horario==="" ? (
+              <img src={horarioPrev} alt="..." className="responsive"  />
+            ):(
+              
+              <img src={horario} alt="..." className="responsive"  />
+            )}
+            
           </Col>
           <Col md="6" className="mt-3">
             <Carrusel />

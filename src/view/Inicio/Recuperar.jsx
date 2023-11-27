@@ -132,13 +132,13 @@ const Login = () => {
       updatePassword(codigo.id, usuario)
         .then((response) => response.json())
         .then((data) => {
-         
+          console.log(data)
           setDownloading(true)
           if (data === true) {
             setErrorCambioPassword(false);
             setcuentaCreada(true);
             setTimeout(() => {
-              navigate("/auth/login");
+              navigate("/auth/login?modulo=cliente");
             }, 3500);
           } else {
             setErrorCrearCuenta(true);

@@ -20,29 +20,34 @@ import { Link } from "react-router-dom";
 import Header from "../../components/Headers/Header";
 import { listaEjercicios } from "../../api/Rutinas/Ejercicios";
 import { MagicMotion } from "react-magic-motion";
+import { useUserContext } from "../../components/Context/UserContext";
 
 const Rutinas = () => {
+
+  const {ejercicios,setEjercicios}=useUserContext()
   /*
     #######---Ejercicios----------#################################################################3#######
     */
   //Lista de ejercicios
-  const [loading, setLoading] = useState(true);
-  const [ejercicios, setEjercicios] = useState([]);
+  const [loading, setLoading] = useState(false);
+  //const [ejercicios, setEjercicios] = useState([]);
   const [filtroEjercicio, setFiltroEjercicio] = useState("");
-  useEffect(() => {
-    listadoEjercicios();
-  }, []);
-  const listadoEjercicios = () => {
-    listaEjercicios()
-      .then((response) => response.json())
-      .then((data) => {
-        setLoading(false);
-        setEjercicios(data);
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  };
+  // useEffect(() => {
+  //   listadoEjercicios();
+  // }, []);
+
+  // const listadoEjercicios = () => {
+    
+  //   listaEjercicios()
+  //     .then((response) => response.json())
+  //     .then((data) => {
+  //       setLoading(false);
+  //       setEjercicios(data);
+  //     })
+  //     .catch((error) => {
+  //       console.log(error);
+  //     });
+  // };
   //Filtro de la tabla
   const filtroEjercicios = ejercicios.filter((ejercicio) =>
     ejercicio.nombre.toLowerCase().includes(filtroEjercicio.toLowerCase())

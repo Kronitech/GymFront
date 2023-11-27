@@ -90,10 +90,11 @@ const Perfil = () => {
                   formDataFile
                 );
                 if (response.ok) {
+                  setUrlImagen(e.target.result)
                   const data = await response.json();
                   setUsuario(data);
                   setTieneImagen(false);
-                  getImagenPerfil();
+                  
                   setDownloading(false);
                   Swal.fire({
                     icon: "success",
@@ -147,7 +148,7 @@ const Perfil = () => {
     // Convierte la diferencia en días
     const diferenciaEnDias = diferenciaEnMilisegundos / (1000 * 60 * 60 * 24);
 
-    return Math.abs(Math.round(diferenciaEnDias)); // Usamos Math.abs para asegurarnos de que la diferencia sea positiva
+    return Math.abs(Math.round(diferenciaEnDias))+1; // Usamos Math.abs para asegurarnos de que la diferencia sea positiva
   };
   //Guardo el usuario en la const usuarioNew
   useEffect(()=>{
@@ -466,7 +467,7 @@ const Perfil = () => {
                             id="cedula"
                             placeholder="Documento"
                             type="text"
-                            disabled={disabledInputs}
+                            disabled
                             onChange={handleChange}
                             required
                           />
