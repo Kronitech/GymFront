@@ -36,7 +36,8 @@ const Index = () => {
   
   const {
     publicidades,
-    horario
+    horario,
+    corporativo
     
   }=useUserContext();
 
@@ -83,7 +84,7 @@ const Index = () => {
                 </div>
                 <div className="col">
                   <Link
-                    to="https://www.google.com/maps/place/Colombia/@4.5871254,-85.0303691,5z/data=!3m1!4b1!4m6!3m5!1s0x8e15a43aae1594a3:0x9a0d9a04eff2a340!8m2!3d4.570868!4d-74.297333!16zL20vMDFsczI?entry=ttu"
+                    to={corporativo?.ubicacion}
                     target="_blank"
                   >
                     <p className="mt-3 mb-0 text-muted text-sm text-center">
@@ -116,7 +117,7 @@ const Index = () => {
         </Row>
         <Row>
           <Button className="whatsapp-button">
-            <a href="https://wa.me/qr/OKC3YUZTGXMTM1" target="_blank">
+            <a href={corporativo?.telefono} target="_blank">
               {" "}
               <FaWhatsapp className="h1 mt-1 text-white" />
             </a>

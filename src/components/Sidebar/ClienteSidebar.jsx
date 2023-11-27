@@ -32,7 +32,7 @@ const Sidebar = (props) => {
   const navigate = useNavigate();
   const modulo = localStorage.getItem("modulo");
 
-  const { membresiaActiva, urlImagen } = useUserContext();
+  const { membresiaActiva, urlImagen ,logoImg} = useUserContext();
   // Función para cerrar sesión y redirigir al usuario al login
   const handleCerrarSesion = () => {
     // Borramos el token del localStorage
@@ -122,15 +122,16 @@ const Sidebar = (props) => {
           <span className="navbar-toggler-icon" />
         </button>
         {/* Brand */}
-        {logo ? (
+        {logo && logoImg ? (
           <NavbarBrand className="pt-0" {...navbarBrandProps}>
             <img
               alt={logo.imgAlt}
               className="navbar-brand-img"
-              src={logo.imgSrc}
+              src={logoImg}
             />
           </NavbarBrand>
         ) : null}
+        
         {/* User */}
         <Nav className="align-items-center d-md-none">
           <UncontrolledDropdown nav>

@@ -5,18 +5,19 @@ import logo from "../../assets/img/brand/logo.svg";
 import { Link } from "react-router-dom";
 
 const Login = () => {
+
   return (
     <>
       <footer className="py-5 bg-primary text-white">
         <Container>
           <Row className="text-center justify-content-center">
-            <Col xl="4">
+            {/* <Col xl="4">
               <div className="text-center text-xl-left">
                 <Link to="/">
-                  <img alt="..." src={logo} />
+                  <img alt="..." src={logoImg} />
                 </Link>
               </div>
-            </Col>
+            </Col> */}
             <Col xl="8">
               <p className="mt-7">Mejora tu salud y bienestar con nosotros.</p>
             </Col>
