@@ -54,6 +54,7 @@ import {
   updateEjercicio,
 } from "../../../api/Rutinas/Ejercicios";
 import {
+  deleteRutina,
   listaRutinas,
   saveRutina,
   updateRutina,
@@ -61,12 +62,16 @@ import {
 import SpinnerGrupo from "../../../components/Sppiner";
 import { MagicTabSelect } from "react-magic-motion";
 import { useUserContext } from "../../../components/Context/UserContext";
+import { listaAsistencia } from "../../../api/Asistencias/Asistencia";
+import { listaMusculo, saveMusculo } from "../../../api/Rutinas/Musculo";
 
 const Rutinas = () => {
   //Menu
   const [loading, setLoading] = useState(false);
   const [loading2, setLoading2] = useState(false);
   const [loading3, setLoading3] = useState(true);
+  
+  const [musculos, setMusculos] = useState([]);
   const [tabs, setTabs] = useState(1);
   const toggleNavs = (index) => {
     setTabs(index);
@@ -89,7 +94,19 @@ const Rutinas = () => {
       console.log(error);
     }
   };
+  //Lista de musculos
+  const listadoMusculos = async () => {
+    try {
+      const response = await listaMusculo();
+      const data = await response.json();
+  
+      setMusculos(data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
   useEffect(() => {
+    listaMusculo()
     listadoEquipamiento();
   }, []);
 
@@ -161,7 +178,7 @@ const Rutinas = () => {
     };
     if (disponibilidad > cantidad) {
       setEquipamientoError(true);
-      setDownloading(false)
+      setDownloading(false);
     } else {
       saveEquipamiento(equipameintoNew)
         .then((response) => response.json())
@@ -249,7 +266,10 @@ const Rutinas = () => {
       preConfirm: () => {
         return {
           nombre: document.getElementById("swal-nombre").value,
-          cantidad: parseInt(document.getElementById("swal-cantidad").value, 10),
+          cantidad: parseInt(
+            document.getElementById("swal-cantidad").value,
+            10
+          ),
           disponibilidad: parseInt(
             document.getElementById("swal-disponibilidad").value,
             10
@@ -258,7 +278,7 @@ const Rutinas = () => {
       },
       showCancelButton: true,
     });
-  
+
     if (
       formValues &&
       (formValues.nombre ||
@@ -266,7 +286,7 @@ const Rutinas = () => {
         formValues.cantidad !== undefined)
     ) {
       setDownloading(true);
-  
+
       const equipamientoNew = {
         id: equipamiento.id,
         nombre: formValues.nombre || equipamiento.nombre,
@@ -279,12 +299,10 @@ const Rutinas = () => {
             ? parseInt(formValues.disponibilidad, 10)
             : equipamiento.disponibilidad,
       };
-  
-      if (
-        Number(equipamientoNew.disponibilidad) <= equipamientoNew.cantidad
-      ) {
+
+      if (Number(equipamientoNew.disponibilidad) <= equipamientoNew.cantidad) {
         console.log(equipamientoNew);
-  
+
         if (equipamientoNew.cantidad > 0) {
           updateEquipamiento(equipamientoNew).then((response) => {
             if (response.ok) {
@@ -301,13 +319,11 @@ const Rutinas = () => {
         }
       } else {
         setDownloading(false);
-        Swal.fire(
-          `La Disponibilidad debe ser menor o igual que la cantidad`
-        );
+        Swal.fire(`La Disponibilidad debe ser menor o igual que la cantidad`);
       }
     }
   };
-  
+
   //----------------------------------------------------------------------------------------------------
   // ----EJERCICIOS ------------------------------------------------------------------------------------
   //Lista de ejercicios
@@ -662,7 +678,76 @@ const Rutinas = () => {
   const handleSelectChange = (event) => {
     const nuevoValor = event.target.value;
     setMusculoSeleccionado(nuevoValor);
-    console.log("Valor seleccionado:", filtroRutinas);
+  };
+
+
+  const registrarMusculo= async()=>{
+    const { value: musculo } = await Swal.fire({
+      title: "Registrar Musculo",
+      input: "text",
+      inputLabel: "Musculo",
+      inputPlaceholder: "Ingresa el nombre"
+    });
+    if (musculo) {
+      setDownloading(true)
+      const musculoNew={
+        nombre:musculo
+      }
+      saveMusculo(musculoNew)
+      .then(res=>res.json())
+      .then(data=>{
+        listadoMusculos()
+        Swal.fire(`Musculo: ${musculo} Registrado`);
+      })
+      .catch(e=>{
+       
+        listadoMusculos()
+        Swal.fire(`Error Musculo: ${musculo} ya esta Registrado`);
+
+      })
+      .finally(f=>{
+        setDownloading(false)
+      })
+      
+    }
+  }
+  const handleEliminarRutina = (rutina) => {
+    Swal.fire({
+      title: "Eliminar Rutina?",
+      text: "Todos los clientes perderan su rutina !",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Eliminar!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        setDownloading(true);
+        deleteRutina(rutina.id)
+          .then((res) => res.json())
+          .then((data) => {
+            listadoRutinas();
+            Swal.fire({
+              icon: "success",
+              title: "¡Completado!",
+              text: "Rutina Eliminada.",
+              showConfirmButton: false,
+              timer: 1500,
+            });
+          })
+          .catch((e) => {
+            console.log(e);
+            Swal.fire({
+              title: "Error!",
+              text: "intenta mas tarde.",
+              icon: "error",
+            });
+          })
+          .finally((f) => {
+            setDownloading(false);
+          });
+      }
+    });
   };
 
   return (
@@ -885,22 +970,29 @@ const Rutinas = () => {
                                       <Row className="aling-items-center">
                                         <div className="col  ">
                                           <h3 className="mb-0 mt-3 text-dark fw-bold">
-                                              RUTINA {" "}
+                                            <small className="h2 text-primary">{index+1}</small> RUTINA{" "}
                                             {rutina.nombre.toUpperCase()}
                                           </h3>
                                         </div>
                                         <div className="col text-right">
-                                          <Link title="Actualizar">
-                                            <Button
-                                              className="fw-bold h2"
-                                              color="primary"
-                                              type="submit"
-                                              onClick={() =>
-                                                handleOpcionesRutina(rutina)
-                                              }
-                                            >
-                                              <i className="fa-regular fa-pen-to-square" />{" "}
-                                            </Button>
+                                          <Link
+                                            title="Actualizar"
+                                            className="fw-bold h1 text-primary  mr-2"
+                                            type="submit"
+                                            onClick={() =>
+                                              handleOpcionesRutina(rutina)
+                                            }
+                                          >
+                                            <i className="fa-regular fa-pen-to-square" />{" "}
+                                          </Link>
+                                          <Link
+                                            title="Eliminar"
+                                            className="fw-bold h1 text-danger "
+                                            onClick={() =>
+                                              handleEliminarRutina(rutina)
+                                            }
+                                          >
+                                            <i className="fa fa-trash" />{" "}
                                           </Link>
                                         </div>
                                       </Row>
@@ -1430,7 +1522,7 @@ const Rutinas = () => {
                           for="musculaturaTrabajada"
                           className="form-control-label"
                         >
-                          Musculatura Trabajada:
+                          Musculatura Trabajada: <Link title="Registrar Musculo" className="h3" onClick={registrarMusculo}><i class="fa fa-plus-circle" aria-hidden="true"></i></Link>
                         </Label>
                         <Input
                           type="select"
@@ -1441,16 +1533,15 @@ const Rutinas = () => {
                           onChange={handleChange}
                           required
                         >
-                          <option value="">Selecciona una musculatura</option>
-                          <option value="cuadriceps">Cuádriceps</option>
-                          <option value="pectoral">Pectorales</option>
-                          <option value="biceps">Bíceps</option>
-                          <option value="espalda-baja">Espalda Baja</option>
-                          <option value="abdominales">Abdominales</option>
-                          <option value="hombros">Hombros</option>
-                          <option value="gluteos">Glúteos</option>
-                          <option value="isquiotibiales">Isquiotibiales</option>
-                          <option value="trapecios">Trapecios</option>
+                           <option value="" >Todos los musculos</option>
+                         {musculos.length>0 && (
+                          <>
+                          {musculos.map((musculo)=>(
+                          
+                          <option value={musculo.nombre} key={musculo.id}>{musculo.nombre}</option>
+                         ))}
+                          </>
+                         )}
                           {/* Agrega más opciones según tus necesidades */}
                         </Input>
                       </FormGroup>
@@ -1853,7 +1944,7 @@ const Rutinas = () => {
                           for="musculaturaTrabajada"
                           className="form-control-label fw-bold text-primary"
                         >
-                          Musculatura Trabajada:
+                          Musculatura Trabajada: <Link title="Registrar Musculo" className="h3" onClick={registrarMusculo}><i class="fa fa-plus-circle" aria-hidden="true"></i></Link>
                         </Label>
                         <Input
                           type="select"
@@ -1864,16 +1955,15 @@ const Rutinas = () => {
                           onChange={handleChangeRutina}
                           required
                         >
-                          <option value="">Selecciona una musculatura</option>
-                          <option value="cuadriceps">Cuádriceps</option>
-                          <option value="pectoral">Pectorales</option>
-                          <option value="biceps">Bíceps</option>
-                          <option value="espalda-baja">Espalda Baja</option>
-                          <option value="abdominales">Abdominales</option>
-                          <option value="hombros">Hombros</option>
-                          <option value="gluteos">Glúteos</option>
-                          <option value="isquiotibiales">Isquiotibiales</option>
-                          <option value="trapecios">Trapecios</option>
+                        <option value="" >Todos los musculos</option>
+                         {musculos.length>0 && (
+                          <>
+                          {musculos.map((musculo)=>(
+                          
+                          <option value={musculo.nombre} key={musculo.id}>{musculo.nombre}</option>
+                         ))}
+                          </>
+                         )}
                           {/* Agrega más opciones según tus necesidades */}
                         </Input>
                       </FormGroup>

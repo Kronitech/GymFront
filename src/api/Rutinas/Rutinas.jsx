@@ -34,5 +34,15 @@ async function updateRutina(rutina){
     })
     return result;
 }
+async function deleteRutina(id){
+    let token=localStorage.getItem("token")
+    const result=await fetch(urlBackend+"rutina/delete/"+id,{
+        method:'DELETE',
+        headers:{
+            "Authorization":"Bearer "+token
+        }
+    })
+    return result;
+}
 
-export {listaRutinas,saveRutina,updateRutina}
+export {listaRutinas,saveRutina,updateRutina,deleteRutina}

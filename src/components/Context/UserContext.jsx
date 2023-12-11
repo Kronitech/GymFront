@@ -377,7 +377,7 @@ export const UserProvider = ({ children }) => {
     listaRutinas()
       .then((res) => res.json())
       .then((data) => {
-        setRutinas(data);
+        setRutinas(data.reverse());
         console.log(data);
       })
       .catch((error) => {

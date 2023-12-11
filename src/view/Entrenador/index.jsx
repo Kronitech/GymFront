@@ -214,7 +214,8 @@ const Index = () => {
   const [verMedidas, setVerMedidas] = useState(false);
   //Modal para registrar medidas
   const [modal, setModal] = useState(false);
-  const toggle = () => setModal(!modal);
+  const toggle = () => {setModal(!modal)
+    };
   //Modal para registrar rutinas
   const [modalRutina, setModalRutina] = useState(false);
   const toggleRutina = () => setModalRutina(!modalRutina);
@@ -256,9 +257,13 @@ const Index = () => {
     medida.entrenador = {
       id: idEntrenador,
     };
+    medida.usuario={
+      id:infoCliente.id
+    }
     saveMedidasCliente(medida)
       .then((res) => res.json())
       .then((data) => {
+        console.log(data)
         buscarMedidasCliente(infoCliente);
       })
       .catch((e) => {
@@ -408,7 +413,7 @@ const Index = () => {
                               className="my-0 text-white"
                               type="button"
                               color="primary"
-                              onClick={() => setVerMedidas(!verMedidas)}
+                              onClick={() => {setVerMedidas(!verMedidas); setMedida([])}}
                               title="Atras"
                             >
                               <i
