@@ -42,8 +42,9 @@ const Perfil = () => {
     fechaInicio,
     fechaFin,
   } = useUserContext();
-  const [modal, setModal] = useState(false);
+  
   const [downloading, setDownloading] = useState(false);
+  const [modal, setModal] = useState(false);
   const toggle = () => setModal(!modal);
  
 

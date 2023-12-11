@@ -27,7 +27,7 @@ const Rutinas = () => {
     */
   //Lista de rutinas
   const [loading, setLoading] = useState(false);
-  const {rutinas,setRutinas}=useUserContext()
+  const { rutinasCliente, setRutinas, rutinas } = useUserContext();
 
   // useEffect(() => {
   //   listadoRutinas();
@@ -47,8 +47,9 @@ const Rutinas = () => {
   // };
   const [filtroRutina, setFiltroRutina] = useState("");
   //Filtro de la tabla
-  const filtroRutinas = rutinas.filter(
-    (rutina) => rutina.nombre.toLowerCase().includes(filtroRutina.toLowerCase())
+  const filtroRutinas = rutinasCliente.filter(
+    (rutina) =>
+      rutina.rutinaId.nombre.toLowerCase().includes(filtroRutina.toLowerCase())
     //
   );
 
@@ -80,7 +81,7 @@ const Rutinas = () => {
             <Row className="align-items-center">
               <div className="col">
                 <h3 className="mb-0">
-                  LISTA DE RUTINAS - Items : {rutinas.length}
+                  LISTA DE RUTINAS - Items : {rutinasCliente.length}
                 </h3>
               </div>
             </Row>
@@ -130,7 +131,7 @@ const Rutinas = () => {
           </Card>
         ) : (
           <>
-            {rutinas && (
+            {rutinasCliente && (
               <div>
                 {filtroRutinas.map((rutina) => (
                   <>
@@ -138,36 +139,48 @@ const Rutinas = () => {
                       className="my-2 text-justify"
                       //   color="primary"
                       //   outline
-                      key={rutina.id}
+                      key={rutina.rutinaId.id}
                     >
                       <CardBody>
                         <CardTitle tag="h1" className="text">
                           <Row className="aling-items-center">
                             <div className="col  ">
                               <h3 className="mb-0 mt-3 text-dark fw-bold">
-                                <span className="form-control-label text-primary">
-                                  Rutina :{" "}
-                                </span>
-                                {rutina.nombre.toUpperCase()}
+                                  RUTINA {" "}
+                                
+                                {rutina.rutinaId.nombre.toUpperCase()}
                               </h3>
                             </div>
                           </Row>
                         </CardTitle>
-                        <CardText className="text-dark fw-bold">
-                          <span className="form-control-label text-primary">
-                            Descripcion :
-                          </span>{" "}
-                          {rutina.descripcion}
-                        </CardText>
+                        <Row>
+                          <Col lg="6">
+                            <CardTitle tag="h3" className=" text-primary mb-0">
+                              Musculo a trabajar
+                            </CardTitle>
+                            <CardText className="text-dark fw-bold">
+                              {rutina?.rutinaId.musculo?.toUpperCase()}
+                            </CardText>
+                          </Col>
+                          <Col lg="6">
+                            <CardTitle tag="h3" className=" text-primary mb-0">
+                              Duracion
+                            </CardTitle>
+                            <CardText className="text-dark fw-bold">
+                              {rutina.rutinaId.duracion}
+                            </CardText>
+                          </Col>
+                          <Col lg="12">
+                            <CardTitle tag="h3" className=" text-primary mb-0">
+                              Descripcion
+                            </CardTitle>
+                            <CardText className="text-dark fw-bold">
+                              {rutina.rutinaId.descripcion}
+                            </CardText>
+                          </Col>
+                        </Row>
 
-                        <CardText className="text-dark fw-bold">
-                          <span className="form-control-label text-primary">
-                            Duracion :
-                          </span>{" "}
-                          {rutina.duracion}
-                        </CardText>
-
-                        {rutina.ejercicios?.map((ejercicio) => (
+                        {rutina.rutinaId.ejercicios?.map((ejercicio) => (
                           <Row key={ejercicio.id}>
                             <Col sm="12">
                               <h3 className="mb-0 mt-3 text-dark fw-bold">

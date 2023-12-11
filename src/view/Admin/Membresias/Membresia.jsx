@@ -38,6 +38,8 @@ import {
   updateMembresia,
   listaUsuarioMembresia,
   listaUsuarioMembresiaInforme,
+  deleteMembresia,
+  listaMembresiaActivas,
 } from "../../../api/Membresia/Membresia";
 import SpinnerGrupo from "../../../components/Sppiner";
 import { MagicMotion } from "react-magic-motion";
@@ -63,6 +65,7 @@ const Membresia = () => {
     setMembresias,
     usuariosMembresias,
     setUsuariosMembresias,
+    setMembresiasActivas
   } = useUserContext();
   //Membresia selecionada
   const [membresia, setMembresia] = useState([]);
@@ -84,7 +87,7 @@ const Membresia = () => {
   const toggleInforme = () => {
     setModalInforme(!modalInforme);
   };
-  //Listado de entrenadores
+  //Listado de membresias
   const listado = async () => {
     try {
       setLoading(true);
@@ -92,22 +95,23 @@ const Membresia = () => {
       const data = await response.json();
       setLoading(false);
       setMembresias(data);
+      console.log(data)
     } catch (error) {
       console.log(error);
     }
   };
-  //Listado de usuariosMembresias
-  const listadoUsuarios = async () => {
+  //Listado de membresias activas
+  const listadoMembresiasActvias = async () => {
     try {
-      setLoading2(false);
-      const response = await listaUsuarioMembresia();
+      const response = await listaMembresiaActivas();
       const data = await response.json();
-      setLoading2(false);
-      setUsuariosMembresias(data);
+
+      setMembresiasActivas(data);
     } catch (error) {
       console.log(error);
     }
   };
+
 
   //Abrir modal y cargar Membresia
   const handleOpciones = (membresia) => {
@@ -115,12 +119,46 @@ const Membresia = () => {
     setMembresia(membresia);
   };
 
-  //Actualizar campos del modal
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-
-    setMembresia((prevEntrenador) => ({ ...prevEntrenador, [name]: value }));
+  const eliminarMembresia = (id) => {
+    console.log(id);
+    Swal.fire({
+      title: "Eliminar Membresia?",
+      text: "esta accion es permanente!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Eliminar!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        deleteMembresia(id)
+          .then((res) => res.json())
+          .then((data) => {
+            console.log(data);
+            Swal.fire({
+              title: "Eliminado!",
+              text: "La membresia se elimino.",
+              icon: "success",
+            });
+          })
+          .catch((e) => {
+            console.log(e);
+          });
+      }
+    });
   };
+  useEffect(() => {
+    console.log("Valor de membresia.estado:", membresia.estado);
+  }, [membresia.estado]);
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+  
+    // Manejar el estado del checkbox
+    const newValue = type === 'checkbox' ? checked : value;
+  
+    setMembresia((prevEntrenador) => ({ ...prevEntrenador, [name]: newValue }));
+  };
+  
 
   //Registrar Membresia
   const registrarMembresia = (e) => {
@@ -132,6 +170,7 @@ const Membresia = () => {
         setDownloading(false);
         setMembresia([]);
         listado();
+        listadoMembresiasActvias()
         toggle();
         Swal.fire({
           icon: "success",
@@ -156,12 +195,13 @@ const Membresia = () => {
   //Actualizar Membresia
   const actualizarMembresia = (e) => {
     e.preventDefault();
-    setDownloading(true);
+   setDownloading(true);
     updateMembresia(membresia)
       .then((response) => {
         if (response.ok) {
           toggleUpdate();
           listado();
+          listadoMembresiasActvias()
           setDownloading(false);
           Swal.fire({
             icon: "success",
@@ -188,12 +228,6 @@ const Membresia = () => {
 
   const columns = [
     {
-      name: "Id",
-      selector: (row) => row.id,
-      sortable: true,
-      maxWidth: "35px",
-    },
-    {
       name: "Nombre",
       selector: (row) => row.nombre,
       sortable: true,
@@ -216,6 +250,7 @@ const Membresia = () => {
       selector: (row) => row.duracion,
       sortable: true,
       wrap: true,
+     
     },
     {
       name: "Descripcion",
@@ -223,8 +258,23 @@ const Membresia = () => {
       selector: (row) => row.descripcion,
       sortable: true,
       wrap: true,
+      width:"30%"
     },
+    {
+      name: "Estado",
+      cell: (row) => row.estado ?
+       <Link className="text-primary h2" title="ACTIVA">
+        <i class="fa fa-check-square text-success fw-bold" aria-hidden="true"/>
+       </Link>
+      :<Link className="text-primary h2" title="OCULTA">
+        <i class="fa fa-ban text-red" aria-hidden="true"/>
+      </Link> 
+      ,
+      selector: (row) => row.estado,
 
+      sortable: true,
+      maxWidth: "35px",
+    },
     {
       name: "Acciones",
       cell: (row) => (
@@ -235,6 +285,13 @@ const Membresia = () => {
               <i className="fa-regular fa-pen-to-square fw-bold " />
             </Link>
           </h3>
+          {/* <span style={{ marginRight: '10px' }}></span> 
+          <h3 onClick={() => eliminarMembresia(row.id)}>
+            <Link className="text-red  h2" title="Actualizar">
+              {" "}
+              <i className="fa fa-trash fw-bold " />
+            </Link>
+          </h3> */}
         </div>
       ),
       ignoreRowClick: true,
@@ -243,7 +300,6 @@ const Membresia = () => {
     },
   ];
   const columnsUsuarios = [
-    
     {
       name: "Membresia ",
       selector: (row) => buscarMembresia(row.membresiaId),
@@ -437,7 +493,6 @@ const Membresia = () => {
     downloadPdfComprobante(id)
       .then((res) => res.blob())
       .then((blob) => {
-        
         setDownloading(false);
         if (blob.size === 0) {
           alert("No hay membresias vendidas en ese rango de fechas");
@@ -938,7 +993,8 @@ const Membresia = () => {
                           name="nombre"
                           placeholder="Basic Fitness"
                           value={membresia.nombre}
-                          onChange={handleChange}
+                          //onChange={handleChange}
+                          disabled
                           type="text"
                           required
                         />
@@ -962,7 +1018,7 @@ const Membresia = () => {
                         />
                       </FormGroup>
                     </Col>
-                    <Col lg="6">
+                    <Col lg="5">
                       <FormGroup>
                         <label className="form-control-label" htmlFor="cedula">
                           Precio (Pesos)
@@ -980,7 +1036,7 @@ const Membresia = () => {
                         />
                       </FormGroup>
                     </Col>
-                    <Col lg="6">
+                    <Col lg="5">
                       <FormGroup>
                         <label
                           className="form-control-label"
@@ -999,6 +1055,24 @@ const Membresia = () => {
                           required
                           min={1}
                         />
+                      </FormGroup>
+                    </Col>
+                    <Col lg="2">
+                      <FormGroup>
+                      <label
+                            className="form-control-label"
+                            htmlFor="telefono"
+                          >
+                            Estado
+                          </label>
+                        <FormGroup check className="mt-2 fw-bold h3">
+                          
+                          <Input id="estado" name="estado" type="checkbox"
+                          value={membresia?.estado+""}
+                          checked={membresia?.estado}
+                          onChange={handleChange} />{" "}
+                          <Label check>Activa</Label>
+                        </FormGroup>
                       </FormGroup>
                     </Col>
                   </Row>

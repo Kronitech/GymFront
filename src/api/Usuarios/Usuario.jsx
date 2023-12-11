@@ -10,6 +10,17 @@ async function listaUsuarioRol(rol){
     })
     return result;
 }
+async function listaUsuarioRolEntrenador(){
+    const token=localStorage.getItem("token")
+    const result=await fetch(urlBackend+"rol/usuario/entrenadores",{
+        method:"GET",
+        headers:{
+            "Authorization":"Bearer "+token
+        }
+    })
+    return result;
+}
+
 
 async function updateUsuario(usuario){
     let token=localStorage.getItem("token")
@@ -24,4 +35,4 @@ async function updateUsuario(usuario){
     return result;
 }
 
-export {listaUsuarioRol,updateUsuario}
+export {listaUsuarioRol,updateUsuario,listaUsuarioRolEntrenador}

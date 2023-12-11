@@ -17,6 +17,7 @@ import {
 //import logo from "../../assets/img/brand/logo.svg";
 import { useUserContext } from "../Context/UserContext";
 
+import  logoDefault  from "../../assets/img/brand/logo.png";
 const AdminNavbar = () => {
   const {logoImg}=useUserContext();
   return (
@@ -24,10 +25,17 @@ const AdminNavbar = () => {
       <Navbar className="navbar-top navbar-horizontal navbar-dark " expand="md">
         <Container className="px-4">
           <NavbarBrand to="/" tag={Link}>
-          <img
+          {logoImg==="" ?(
+            <img
+            alt="Cargando..."
+            src={logoDefault}
+          />
+          ):(
+            <img
               alt="Cargando..."
               src={logoImg}
             />
+          )}
           </NavbarBrand>
           <button className="navbar-toggler" id="navbar-collapse-main">
             <span className="navbar-toggler-icon" />

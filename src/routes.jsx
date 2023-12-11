@@ -20,7 +20,7 @@ import ClienteEntrenamientos from "./view/Client/Entrenamiento"
 import ClienteRegistrar from "./view/Client/Registrar"
 import Perfil from "./view/Perfil/Perfil"
 import EntrenadorCliente from "./view/Client/Entrenador"
-
+import MedidasCliente from "./view/Client/Medidas"
 var routes = [
   {
     path: "/index",
@@ -134,6 +134,13 @@ var routes = [
     name: "Entrenamientos",
     icon: "fa fa-bolt text-yellow",
     component: <ClienteEntrenamientos />,
+    layout: "/cliente",
+  },
+  {
+    path: "/medidas",
+    name: "Medidas",
+    icon: "fa fa-male text-dark",
+    component: <MedidasCliente />,
     layout: "/cliente",
   },
   

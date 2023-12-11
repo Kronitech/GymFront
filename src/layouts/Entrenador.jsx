@@ -46,7 +46,7 @@ const Entrenador = (props) => {
   };
   //Filtro las rutas para el modulo director
   const rutasFiltradas = routes.filter((ruta) => ruta.layout === "/entrenador" && ruta.icon!=="")
-  console.log(rutasFiltradas)
+
   return (
     <>
     <UserProvider>

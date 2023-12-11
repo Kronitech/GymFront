@@ -73,7 +73,7 @@ const Corporativo = () => {
   const handleActualizarCorporativo = (e) => {
     e.preventDefault();
     setDownloading(true);
-    console.log(corporativo);
+    console.log(corporativoNew);
     updateCorporativo(corporativoNew)
       .then((res) => res.json())
       .then((data) => {

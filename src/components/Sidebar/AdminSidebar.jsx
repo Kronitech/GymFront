@@ -27,7 +27,7 @@ import {
 
 import { useNavigate } from "react-router-dom";
 import { useUserContext } from "../Context/UserContext";
-
+import  logoDefault  from "../../assets/img/brand/logo.png";
 const Sidebar = (props) => {
   const { urlImagen, membresiaActiva, logoImg } = useUserContext();
   const navigate = useNavigate();
@@ -41,7 +41,7 @@ const Sidebar = (props) => {
     // window.location.replace("/auth/login");
   };
 
-  const modulo=localStorage.getItem("modulo")
+  const modulo = localStorage.getItem("modulo");
   const handlePerfil = () => {
     if (membresiaActiva && modulo === "cliente") {
       navigate("/" + modulo + "/perfil", { replace: true });
@@ -110,16 +110,20 @@ const Sidebar = (props) => {
           <span className="navbar-toggler-icon" />
         </button>
         {/* Brand */}
-       
-        {logo && logoImg ? (
+        {logo && logoImg === "" ? (
           <NavbarBrand className="pt-0" {...navbarBrandProps}>
             <img
               alt={logo.imgAlt}
               className="navbar-brand-img"
-              src={logoImg}
+              src={logoDefault}
             />
           </NavbarBrand>
-        ) : null}
+        ) : (
+          <NavbarBrand className="pt-0" {...navbarBrandProps}>
+            <img alt={logo.imgAlt} className="navbar-brand-img" src={logoImg} />
+          </NavbarBrand>
+        )}
+
         {/* User */}
         <Nav className="align-items-center d-md-none">
           <UncontrolledDropdown nav>
@@ -143,9 +147,7 @@ const Sidebar = (props) => {
               <DropdownItem className="noti-title" header tag="div">
                 <h6 className="text-overflow m-0">Opciones</h6>
               </DropdownItem>
-              <DropdownItem
-                onClick={handlePerfil}
-              >
+              <DropdownItem onClick={handlePerfil}>
                 <i className="ni ni-single-02" />
                 <span>Mi perfil</span>
               </DropdownItem>

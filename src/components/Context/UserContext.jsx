@@ -1,8 +1,11 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import {
+  getMembresiaId,
   listaMembresia,
+  listaMembresiaActivas,
   listaUsuarioMembresia,
   usuarioMembresiaByCedula,
+  usuarioMembresiasEntrenador,
 } from "../../api/Membresia/Membresia";
 import {
   asitenciaRegistrada,
@@ -22,6 +25,7 @@ import {
 import { listaEjercicios } from "../../api/Rutinas/Ejercicios";
 import { listaRutinas } from "../../api/Rutinas/Rutinas";
 import { listaUsuarioRol } from "../../api/Usuarios/Usuario";
+import { getRutinasDelCliente } from "../../api/Medidas/Medidas";
 
 const UserContext = createContext();
 
@@ -32,13 +36,9 @@ export const UserProvider = ({ children }) => {
      MODULO  INICIO -- PUBLICIDADES
   */
   //Informacion de la corporacion
-  useEffect(() => {
-    obtenerInformacionCorporativa();
-  }, []);
-
   const [logoImg, setLogoImg] = useState("");
   const [horario, setHorario] = useState("");
-  
+
   const [corporativo, setCorporativo] = useState([]);
   const obtenerInformacionCorporativa = async () => {
     try {
@@ -85,11 +85,142 @@ export const UserProvider = ({ children }) => {
     }
   };
 
+  /*
+      MODULOS 
+  */
+  //MODULO USUARIO
+  const modulo = localStorage.getItem("modulo");
+  //Informacion del usuario para el perfil (TODOS LOS MODULOS)
+  const [usuario, setUsuario] = useState([]);
+  //Imagen de perfil del usuario (TODOS LOS MODULOS)
+  const [urlImagen, setUrlImagen] = useState(logoUser); //(TODOS LOS MODULOS) Puedes inicializarlo con el valor inicial de la imagen
+  //Si es cliente se verifica la membresia
+  const [membresiaActiva, setMembresiaActiva] = useState(false); // (MODULO )Puedes inicializarlo con el valor inicial de la imagen
+  //Guarda el cliente
+  const [cliente, setCliente] = useState([]);
+  //Fecha Inicio
+  const [fechaInicio, setFechaInicio] = useState("");
+  //Fecha Fin
+  const [fechaFin, setFechaFin] = useState("");
+  //Seleccionar asistencia
+  const [asistenciaSeleccionada, setAsistenciaSeleccionada] = useState(true);
+  const [time, setTime] = useState(true);
+  //Entrenador del cliente
+  const [entrenador, setEntrenador] = useState([]);
+  //Membresia actual del cliente
+  const [membresia, setMembresia] = useState([]);
+  //Foto del entrenador
+  const [fotoEntrenador, setFotoEntrenador] = useState(logoUser);
+  //Lista de ejercicios
+  const [ejercicios, setEjercicios] = useState([]);
+  //Lista de asistencia
+  const [asistencias, setAsistencias] = useState([]);
+
+  //MODULO CLIENTE
+  useEffect(() => {
+    if (modulo === "cliente") {
+      getCliente();
+    } else {
+      //OTROS MODULOS
+      const user = JSON.parse(localStorage.getItem("data"));
+      setUsuario(user);
+    }
+  }, [modulo]);
+
+  //MODULO CLIENTE
+  const [membresiaActual, setMembresiaActual] = useState([]);
+  useEffect(() => {
+    if (membresiaActiva && modulo === "cliente") {
+      verificarAsistencia();
+
+      buscarFechas();
+
+      obtenerEntrenador();
+      setTimeout(() => {
+        listadoAsistencia();
+        listaRutinasCliente()
+        listadoEjercicios();
+      }, 500);
+    }
+  }, [modulo, membresiaActiva]);
+  //TODOS LOS MODULOS
+  useEffect(() => {
+    if (usuario !== null) getImagenPerfil();
+  }, [usuario]);
+
+  const membresiaActualCliente = (id) => {
+    getMembresiaId(id)
+      .then((res) => res.json())
+      .then((data) => {
+        console.log(data);
+        setMembresiaActual(data);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
+  //MODULO ADMIN Y RECEPCINISTA
+  useEffect(() => {
+    if (modulo === "admin" || modulo === "recepcionista") {
+      listadoClientes();
+      listadoMembresiasActvias();
+    }
+  }, [modulo]);
+  //MODULO ADMIN
+  useEffect(() => {
+    if (modulo === "admin") {
+      listadoMembresias();
+
+      listadoUsuarios();
+      listadoRecepcionista();
+      listadoEntrenadores();
+    }
+  }, [modulo]);
+  //TODOS LOS MODULOS
+  useEffect(() => {
+    if (modulo !== null) {
+      obtenerDatos();
+      listadoRutinas();
+      listadoEjercicios();
+    }
+  }, [modulo]);
+  //publicidad
+  useEffect(() => {
+    obtenerInformacionCorporativa();
+  }, []);
   //Lista de imagenes de publiciddad
   const [publicidades, setPublicidades] = useState([]);
   useEffect(() => {
     listaPublicidades();
   }, []);
+  //MODULO ENTRENADOR
+  useEffect(() => {
+    listadoClientesEntrenador();
+  }, []);
+  const [clientesEntrenador, setClientesEntrenador] = useState([]);
+  const listadoClientesEntrenador = async () => {
+    try {
+      let id = JSON.parse(localStorage.getItem("data")).id;
+      const response = await usuarioMembresiasEntrenador(id);
+      const data = await response.json();
+
+      setClientesEntrenador(data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const [rutinasCliente, setRutinasCliente] = useState([]);
+  const listaRutinasCliente = () => {
+    const id = JSON.parse(localStorage.getItem("data")).id;
+    getRutinasDelCliente(id)
+      .then((res) => res.json())
+      .then((data) => {
+        setRutinasCliente(data);
+      })
+      .catch((e) => {
+        console.log(e);
+      });
+  };
 
   const listaPublicidades = async () => {
     try {
@@ -123,89 +254,7 @@ export const UserProvider = ({ children }) => {
       console.log(error);
     }
   };
-
-  /*
-      MODULOS 
-  */
-  //MODULO USUARIO
-  const modulo = localStorage.getItem("modulo");
-  //Informacion del usuario para el perfil (TODOS LOS MODULOS)
-  const [usuario, setUsuario] = useState([]);
-  //Imagen de perfil del usuario (TODOS LOS MODULOS)
-  const [urlImagen, setUrlImagen] = useState(logoUser); //(TODOS LOS MODULOS) Puedes inicializarlo con el valor inicial de la imagen
-  //Si es cliente se verifica la membresia
-  const [membresiaActiva, setMembresiaActiva] = useState(false); // (MODULO )Puedes inicializarlo con el valor inicial de la imagen
-  //Guarda el cliente
-  const [cliente, setCliente] = useState([]);
-  //Fecha Inicio
-  const [fechaInicio, setFechaInicio] = useState("");
-  //Fecha Fin
-  const [fechaFin, setFechaFin] = useState("");
-  //Seleccionar asistencia
-  const [asistenciaSeleccionada, setAsistenciaSeleccionada] = useState(false);
-  const [time, setTime] = useState(true);
-  //Entrenador del cliente
-  const [entrenador, setEntrenador] = useState([]);
-  //Membresia actual del cliente
-  const [membresia, setMembresia] = useState([]);
-  //Foto del entrenador
-  const [fotoEntrenador, setFotoEntrenador] = useState(logoUser);
-  //Lista de ejercicios
-  const [ejercicios, setEjercicios] = useState([]);
-  //Lista de asistencia
-  const [asistencias, setAsistencias] = useState([]);
-
-  useEffect(() => {
-    if (modulo === "cliente") {
-      getCliente();
-    } else {
-      const user = JSON.parse(localStorage.getItem("data"));
-      setUsuario(user);
-    }
-  }, [modulo]);
-
-  useEffect(() => {
-    if (usuario !== null) getImagenPerfil();
-  }, [usuario]);
-
-  useEffect(() => {
-    if (membresiaActiva && modulo === "cliente") {
-      buscarFechas();
-      verificarAsistencia();
-      obtenerEntrenador();
-      listadoAsistencia();
-      listadoRutinas();
-      listadoEjercicios();
-    }
-  }, [modulo, membresiaActiva]);
-
-  useEffect(() => {
-    if (modulo === "admin" || modulo === "recepcionista") {
-      listadoClientes();
-    }
-    if(modulo === "recepcionista"){
-      listadoMembresias()
-    }
-  }, [modulo]);
-  
-
-  useEffect(() => {
-    if (modulo === "admin") {
-      listadoMembresias();
-      listadoUsuarios();
-      listadoRecepcionista();
-      listadoEntrenadores();
-    }
-  }, [modulo]);
-
-  useEffect(() => {
-    if (modulo !== null) {
-      obtenerDatos();
-      listadoRutinas();
-      listadoEjercicios();
-    }
-  }, [modulo]);
-
+  const [dataMembresiaActiva, setDataMembresiaActiva] = useState([]);
   const getCliente = async () => {
     let cedula = JSON.parse(localStorage.getItem("data")).cedula;
     usuarioMembresiaByCedula(cedula)
@@ -263,7 +312,6 @@ export const UserProvider = ({ children }) => {
   };
 
   const obtenerEntrenador = () => {
-    //setDownloading(true);
     // Obtener la fecha actual
     const fechaActual = new Date();
 
@@ -275,6 +323,8 @@ export const UserProvider = ({ children }) => {
       return fechaInicio < fechaActual && fechaFin > fechaActual;
     });
     if (membresiasActivas !== null) {
+      membresiaActualCliente(membresiasActivas[0].membresiaId);
+      setDataMembresiaActiva(membresiasActivas[0]);
       setMembresia(membresiasActivas);
       getEntrenador(membresiasActivas[0].entrenadorId)
         .then((res) => res.json())
@@ -328,6 +378,7 @@ export const UserProvider = ({ children }) => {
       .then((res) => res.json())
       .then((data) => {
         setRutinas(data);
+        console.log(data);
       })
       .catch((error) => {
         console.log(error);
@@ -357,12 +408,23 @@ export const UserProvider = ({ children }) => {
   };
 
   const [membresias, setMembresias] = useState();
+  const [membresiasActivas, setMembresiasActivas] = useState();
   const listadoMembresias = async () => {
     try {
       const response = await listaMembresia();
       const data = await response.json();
 
       setMembresias(data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const listadoMembresiasActvias = async () => {
+    try {
+      const response = await listaMembresiaActivas();
+      const data = await response.json();
+
+      setMembresiasActivas(data);
     } catch (error) {
       console.log(error);
     }
@@ -374,7 +436,7 @@ export const UserProvider = ({ children }) => {
     try {
       const response = await listaUsuarioMembresia();
       const data = await response.json();
-      
+
       setUsuariosMembresias(data.reverse());
     } catch (error) {
       console.log(error);
@@ -407,6 +469,13 @@ export const UserProvider = ({ children }) => {
   return (
     <UserContext.Provider
       value={{
+        rutinasCliente,setRutinasCliente,
+        membresiaActual,
+        setMembresiaActual,
+        dataMembresiaActiva,
+        setDataMembresiaActiva,
+        membresiasActivas,
+        setMembresiasActivas,
         corporativo,
         setCorporativo,
         logoImg,
@@ -455,6 +524,8 @@ export const UserProvider = ({ children }) => {
         asistencias,
         ejercicios,
         setEjercicios,
+        clientesEntrenador,
+        setClientesEntrenador,
       }}
     >
       {children}

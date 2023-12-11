@@ -10,6 +10,16 @@ async function listaMembresia(){
     })
     return result;
 }
+async function listaMembresiaActivas(){
+    let token=localStorage.getItem("token")
+    const result=await fetch(urlBackend+"membresia/activas",{
+        method:'GET',
+        headers:{
+            "Authorization":"Bearer "+token
+        }
+    })
+    return result;
+}
 
 async function saveMembresia(membresia){
     let token=localStorage.getItem("token")
@@ -36,6 +46,26 @@ async function updateMembresia(membresia){
     return result;
 }
 
+async function deleteMembresia(id){
+    let token=localStorage.getItem("token")
+    const result=await fetch(urlBackend+"membresia/"+id,{
+        method:'DELETE',
+        headers:{
+            "Authorization":"Bearer "+token
+        }
+    })
+    return result;
+}
+async function getMembresiaId(id){
+    let token=localStorage.getItem("token")
+    const result=await fetch(urlBackend+"membresia/"+id,{
+        method:'GET',
+        headers:{
+            "Authorization":"Bearer "+token
+        }
+    })
+    return result;
+}
 async function usuarioMembresiaByCedula(cedula){
     let token=localStorage.getItem("token")
     const result=await fetch(urlBackend+"usuario/membresia/cedula/"+cedula,{
@@ -92,6 +122,19 @@ async function saveUsuarioMembresia(usuarioMembresia){
     return result;
 }
 
+async function updateUsuarioMembresia(usuarioMembresia,id){
+    let token=localStorage.getItem("token")
+    const result=await fetch(urlBackend+"usuario/membresia/update/"+id,{
+        method:'PUT',
+        body:JSON.stringify(usuarioMembresia),
+        headers:{
+            "Authorization":"Bearer "+token,
+            "Content-type":"application/json"
+        }
+    })
+    return result;
+}
+
 async function sendEmailNuevoUsuario(id){
     let token=localStorage.getItem("token")
     const result =await fetch(urlBackend+"mail/new/"+id,{
@@ -104,4 +147,18 @@ async function sendEmailNuevoUsuario(id){
     return result;
 }
 
-export {listaMembresia,listaUsuarioMembresia,listaUsuarioMembresiaInforme,saveMembresia,updateMembresia,usuarioMembresiaByCedula,saveUsuarioMembresia,sendEmailNuevoUsuario,usuarioMembresiasEntrenador}
+export {
+  listaMembresia,
+  updateUsuarioMembresia,
+  listaMembresiaActivas,
+  listaUsuarioMembresia,
+  deleteMembresia,
+  listaUsuarioMembresiaInforme,
+  saveMembresia,
+  updateMembresia,
+  usuarioMembresiaByCedula,
+  getMembresiaId,
+  saveUsuarioMembresia,
+  sendEmailNuevoUsuario,
+  usuarioMembresiasEntrenador,
+};

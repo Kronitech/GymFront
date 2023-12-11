@@ -112,15 +112,7 @@ const Rutinas = () => {
     },
     {
       name: "Disponibilidad",
-      cell: (row) => (
-        <>
-          {row.disponibilidad ? (
-            <i class="fa fa-check-circle text-success fw-bold"></i>
-          ) : (
-            <i class="fa fa-exclamation-triangle text-danger fw-bold"></i>
-          )}
-        </>
-      ),
+      cell: (row) => row.disponibilidad,
       selector: (row) => row.disponibilidad,
       sortable: true,
       wrap: true,
@@ -152,82 +144,129 @@ const Rutinas = () => {
 
   const toggleSave = () => setIsOpen(!isOpen);
 
+  const [equipamientoError, setEquipamientoError] = useState(false);
+
   const guardarEquipamiento = (e) => {
     e.preventDefault();
     setDownloading(true);
     const formData = new FormData(e.target);
     const nombre = formData.get("nombre").toUpperCase();
-    const cantidad= formData.get("cantidad")
-    const check=formData.get("disponibilidad")
-    let  disponibilidad=false
-    if(check==="on"){
-      disponibilidad=true
-    }
+    const cantidad = formData.get("cantidad");
+    const disponibilidad = formData.get("disponibilidad");
+
     const equipameintoNew = {
       nombre,
       cantidad,
-      disponibilidad
+      disponibilidad,
     };
-    saveEquipamiento(equipameintoNew)
-      .then((response) => response.json())
-      .then((data) => {
-        toggleSave();
-        listadoEquipamiento();
-        setDownloading(false);
-        Swal.fire({
-          icon: "success",
-          title: "¡Completado!",
-          text: "Informacion  actualizada.",
-          showConfirmButton: false,
-          timer: 1500,
+    if (disponibilidad > cantidad) {
+      setEquipamientoError(true);
+      setDownloading(false)
+    } else {
+      saveEquipamiento(equipameintoNew)
+        .then((response) => response.json())
+        .then((data) => {
+          toggleSave();
+          listadoEquipamiento();
+          setDownloading(false);
+          Swal.fire({
+            icon: "success",
+            title: "¡Completado!",
+            text: "Informacion  actualizada.",
+            showConfirmButton: false,
+            timer: 1500,
+          });
+        })
+        .catch((error) => {
+          setDownloading(false);
+          Swal.fire({
+            icon: "error",
+            title: "Ha ocurrido un error.",
+            text: "Por favor, intentelo mas tarde.",
+            confirmButtonText: "Aceptar",
+          });
+          console.log(error);
         });
-      })
-      .catch((error) => {
-        setDownloading(false);
-        Swal.fire({
-          icon: "error",
-          title: "Ha ocurrido un error.",
-          text: "Por favor, intentelo mas tarde.",
-          confirmButtonText: "Aceptar",
-        });
-        console.log(error);
-      });
+    }
   };
+  /*
+    `<label for="swal-cantidad" class="swal2-input-label">Cantidad actual: ${equipamiento.cantidad}</label>` +
+          `<input id="swal-cantidad" class="swal2-input"  type="number" min="1" value="${equipamiento.cantidad}" step="1"> ` +
+        
+  */
   // ACTUALIZAR EQUIPAMIENTO
   const actualizarEquipamiento = async (equipamiento) => {
     const { value: formValues } = await Swal.fire({
       title: "Actualizar Equipamiento",
-      html:
-        `<label for="swal-nombre" class="swal2-input-label">Nombre actual: ${equipamiento.nombre}</label>` +
-        `<input id="swal-nombre" class="swal2-input" placeholder="Ingresa el nombre nuevo" value="${equipamiento.nombre}">` +
-        `<label for="swal-cantidad" class="swal2-input-label">Cantidad actual: ${equipamiento.cantidad}</label>` +
-        `<input id="swal-cantidad" class="swal2-input" placeholder="Ingresa la nueva cantidad" type="number" value="${equipamiento.cantidad}">` +
-        `<label for="swal-disponibilidad" class="swal2-input-label">Disponibilidad actual: ${
-          equipamiento.disponibilidad ? "Disponible" : "No Disponible"
-        }</label>` +
-        `<input id="swal-disponibilidad" class="swal2-checkbox" type="checkbox" ${
-          equipamiento.disponibilidad ? "checked" : ""
-        }>`,
+      html: `
+        <div class="row text-center fw-bold">
+          <div class="col-xl-12">
+            <div class="swal2-input-label-container">
+              <label for="swal-nombre" class="swal2-input-label">
+                Nombre actual: ${equipamiento.nombre}
+              </label>
+              <input
+                id="swal-nombre"
+                class="swal2-input"
+                placeholder="Ingresa el nombre nuevo"
+                value="${equipamiento.nombre}"
+              >
+            </div>
+          </div>
+          <div class="col-xl-12">
+            <div class="swal2-input-label-container">
+              <label for="swal-cantidad" class="swal2-input-label">
+                Cantidad actual: ${equipamiento.cantidad}
+              </label>
+              <input
+                id="swal-cantidad"
+                class="swal2-input"
+                placeholder="Ingresa la nueva cantidad"
+                step="1"
+                type="number"
+                value="${equipamiento.cantidad}"
+              >
+            </div>
+          </div>
+          <div class="col-xl-12">
+            <div class="swal2-input-label-container">
+              <label for="swal-disponibilidad" class="swal2-input-label">
+                Disponibilidad actual: ${equipamiento.disponibilidad}
+              </label>
+              <input
+                id="swal-disponibilidad"
+                class="swal2-input"
+                placeholder="Ingresa la nueva cantidad"
+                step="1"
+                type="number"
+                value="${equipamiento.disponibilidad}"
+              >
+            </div>
+          </div>
+          
+        </div>`,
       focusConfirm: false,
       preConfirm: () => {
         return {
           nombre: document.getElementById("swal-nombre").value,
-          cantidad: parseInt(
-            document.getElementById("swal-cantidad").value,
+          cantidad: parseInt(document.getElementById("swal-cantidad").value, 10),
+          disponibilidad: parseInt(
+            document.getElementById("swal-disponibilidad").value,
             10
           ),
-          disponibilidad: document.getElementById("swal-disponibilidad")
-            .checked,
         };
       },
       showCancelButton: true,
     });
-
+  
     if (
       formValues &&
-      (formValues.nombre || formValues.cantidad !== undefined)
+      (formValues.nombre ||
+        formValues.disponibilidad !== undefined ||
+        formValues.cantidad !== undefined)
     ) {
       setDownloading(true);
+  
       const equipamientoNew = {
         id: equipamiento.id,
         nombre: formValues.nombre || equipamiento.nombre,
@@ -235,25 +274,40 @@ const Rutinas = () => {
           formValues.cantidad !== undefined
             ? parseInt(formValues.cantidad, 10)
             : equipamiento.cantidad,
-        disponibilidad: formValues.disponibilidad,
+        disponibilidad:
+          formValues.disponibilidad !== undefined
+            ? parseInt(formValues.disponibilidad, 10)
+            : equipamiento.disponibilidad,
       };
-      if (equipamientoNew.cantidad > 0) {
-        updateEquipamiento(equipamientoNew).then((response) => {
-          if (response.ok) {
-            setDownloading(false);
-            listadoEquipamiento();
-            Swal.fire(`Equipamiento actualizado`);
-          } else {
-            setDownloading(false);
-          }
-        });
+  
+      if (
+        Number(equipamientoNew.disponibilidad) <= equipamientoNew.cantidad
+      ) {
+        console.log(equipamientoNew);
+  
+        if (equipamientoNew.cantidad > 0) {
+          updateEquipamiento(equipamientoNew).then((response) => {
+            if (response.ok) {
+              setDownloading(false);
+              listadoEquipamiento();
+              Swal.fire(`Equipamiento actualizado`);
+            } else {
+              setDownloading(false);
+            }
+          });
+        } else {
+          setDownloading(false);
+          Swal.fire(`La cantidad debe ser mayor que 0`);
+        }
       } else {
         setDownloading(false);
-        Swal.fire(`La cantidad debe ser mayor que 0`);
+        Swal.fire(
+          `La Disponibilidad debe ser menor o igual que la cantidad`
+        );
       }
     }
   };
-
+  
   //----------------------------------------------------------------------------------------------------
   // ----EJERCICIOS ------------------------------------------------------------------------------------
   //Lista de ejercicios
@@ -478,7 +532,8 @@ const Rutinas = () => {
   const [filtroRutina, setFiltroRutina] = useState("");
   //Filtro de la tabla
   const filtroRutinas = rutinas.filter(
-    (rutina) => rutina.nombre.toLowerCase().includes(filtroRutina.toLowerCase())
+    (rutina) =>
+      rutina?.musculo?.toLowerCase().includes(filtroRutina.toLowerCase())
     //
   );
 
@@ -575,10 +630,11 @@ const Rutinas = () => {
   const actualizarRutina = (e) => {
     e.preventDefault();
     setDownloading(true);
-    console.log(rutina);
+
     updateRutina(rutina)
       .then((response) => response.json())
       .then((data) => {
+        console.log(data);
         setDownloading(false);
         listadoRutinas();
         toggleRutinaUpdate();
@@ -600,6 +656,13 @@ const Rutinas = () => {
           confirmButtonText: "Aceptar",
         });
       });
+  };
+  const [musculoSeleccionado, setMusculoSeleccionado] = useState("");
+
+  const handleSelectChange = (event) => {
+    const nuevoValor = event.target.value;
+    setMusculoSeleccionado(nuevoValor);
+    console.log("Valor seleccionado:", filtroRutinas);
   };
 
   return (
@@ -767,7 +830,7 @@ const Rutinas = () => {
                             BUSCAR :
                           </Label>
 
-                          <Col sm={9}>
+                          {/* <Col sm={4}>
                             <Input
                               type="text"
                               className="text-dark fw-bold"
@@ -775,6 +838,38 @@ const Rutinas = () => {
                               value={filtroRutina}
                               onChange={(e) => setFiltroRutina(e.target.value)}
                             />
+                          </Col> */}
+                          <Col sm={9}>
+                            <FormGroup>
+                              <Input
+                                type="select"
+                                name="musculoRutina"
+                                id="musculoRutina"
+                                className="form-control text-dark" // Clase Bootstrap para selects
+                                value={filtroRutina} // Establece el valor del select según el estado
+                                onChange={(e) =>
+                                  setFiltroRutina(e.target.value)
+                                }
+                              >
+                                <option value="">
+                                  Clasificar por musculatura
+                                </option>
+                                <option value="cuadriceps">Cuádriceps</option>
+                                <option value="pectoral">Pectorales</option>
+                                <option value="biceps">Bíceps</option>
+                                <option value="espalda-baja">
+                                  Espalda Baja
+                                </option>
+                                <option value="abdominales">Abdominales</option>
+                                <option value="hombros">Hombros</option>
+                                <option value="gluteos">Glúteos</option>
+                                <option value="isquiotibiales">
+                                  Isquiotibiales
+                                </option>
+                                <option value="trapecios">Trapecios</option>
+                                {/* Agrega más opciones según tus necesidades */}
+                              </Input>
+                            </FormGroup>
                           </Col>
                         </FormGroup>
                         <hr className="my-4" />
@@ -790,9 +885,7 @@ const Rutinas = () => {
                                       <Row className="aling-items-center">
                                         <div className="col  ">
                                           <h3 className="mb-0 mt-3 text-dark fw-bold">
-                                            <span className="form-control-label text-primary">
-                                              Rutina :
-                                            </span>{" "}
+                                              RUTINA {" "}
                                             {rutina.nombre.toUpperCase()}
                                           </h3>
                                         </div>
@@ -812,19 +905,41 @@ const Rutinas = () => {
                                         </div>
                                       </Row>
                                     </CardTitle>
-                                    <CardText className="text-dark fw-bold">
-                                      <span className="form-control-label text-primary">
-                                        Descripcion :
-                                      </span>{" "}
-                                      {rutina.descripcion}
-                                    </CardText>
-
-                                    <CardText className="text-dark fw-bold">
-                                      <span className="form-control-label text-primary">
-                                        Duracion :
-                                      </span>{" "}
-                                      {rutina.duracion}
-                                    </CardText>
+                                    <Row>
+                                      <Col lg="6">
+                                        <CardTitle
+                                          tag="h3"
+                                          className=" text-primary mb-0"
+                                        >
+                                          Musculo a trabajar
+                                        </CardTitle>
+                                        <CardText className="text-dark fw-bold">
+                                          {rutina?.musculo?.toUpperCase()}
+                                        </CardText>
+                                      </Col>
+                                      <Col lg="6">
+                                        <CardTitle
+                                          tag="h3"
+                                          className=" text-primary mb-0"
+                                        >
+                                          Duracion
+                                        </CardTitle>
+                                        <CardText className="text-dark fw-bold">
+                                          {rutina.duracion}
+                                        </CardText>
+                                      </Col>
+                                      <Col lg="12">
+                                        <CardTitle
+                                          tag="h3"
+                                          className=" text-primary mb-0"
+                                        >
+                                          Descripcion
+                                        </CardTitle>
+                                        <CardText className="text-dark fw-bold">
+                                          {rutina.descripcion}
+                                        </CardText>
+                                      </Col>
+                                    </Row>
 
                                     {rutina.ejercicios?.map((ejercicio) => (
                                       <Row key={ejercicio.id}>
@@ -1064,13 +1179,13 @@ const Rutinas = () => {
                               <hr />
                               <Form onSubmit={guardarEquipamiento}>
                                 <Row className="text-center">
-                                  <Col sm="6">
+                                  <Col sm="4">
                                     <FormGroup>
                                       <Label
                                         for="filtro"
                                         className="form-control-label text-primary"
                                       >
-                                        Nombre 
+                                        Nombre
                                       </Label>
                                       <Input
                                         type="text"
@@ -1083,46 +1198,44 @@ const Rutinas = () => {
                                     </FormGroup>
                                   </Col>
 
-                                  <Col lg="6">
+                                  <Col lg="4">
                                     <FormGroup>
                                       <label
                                         className="form-control-label text-primary"
                                         htmlFor="input-first-name"
                                       >
-                                        Cantidad 
+                                        Cantidad
                                       </label>
                                       <Input
                                         className=" fw-bold text-center text-dark"
                                         id="cantidad"
                                         name="cantidad"
                                         placeholder="Ingrese la cantidad"
-                                        type="text"
+                                        type="number"
+                                        min={1}
                                         required
                                       />
                                     </FormGroup>
                                   </Col>
-                                  <Col lg="12" >
-                                  <label
+                                  <Col lg="4">
+                                    <FormGroup check className="text-center ">
+                                      <label
                                         className="form-control-label text-primary"
                                         htmlFor="input-first-name"
                                       >
-                                        Disponibilidad de los equipos?
+                                        Equipos Disponibles
                                       </label>
-                                    <FormGroup check className="text-center ">
-                                    
-                                      <Label check className="text-center mt-3">
-                                        <Input
-                                       
-                                          type="checkbox"
-                                          name="disponibilidad"
-                                          id="disponibilidad"
-                                        />{" "}
-                                        Disponible
-                                      </Label>
+                                      <Input
+                                        className="text-dark fw-bold text-center"
+                                        min={0}
+                                        type="number"
+                                        name="disponibilidad"
+                                        id="disponibilidad"
+                                        placeholder="Ingrese la Disponibilidad"
+                                      />{" "}
                                     </FormGroup>
-                                                <hr />
                                   </Col>
-                                  
+
                                   <Col sm="12" className="mt-3">
                                     <Button color="primary" type="submit">
                                       GUARDAR
@@ -1130,6 +1243,13 @@ const Rutinas = () => {
                                   </Col>
                                 </Row>
                               </Form>
+                              {equipamientoError && (
+                                <p className="text-center text-red">
+                                  {" "}
+                                  Disponiblidad debe ser menor o igual a la
+                                  cantidad
+                                </p>
+                              )}
                               <hr />
                             </CardBody>
                           </Card>
@@ -1667,11 +1787,14 @@ const Rutinas = () => {
                   <Row>
                     <Col lg="12">
                       <FormGroup>
-                        <label className="form-control-label" htmlFor="nombre">
+                        <label
+                          className="form-control-label fw-bold text-primary"
+                          htmlFor="nombre"
+                        >
                           Nombre
                         </label>
                         <Input
-                          className="form-control-alternative"
+                          className="form-control-alternativefw-bold text-dark"
                           id="nombre"
                           name="nombre"
                           placeholder="Fuerza Total"
@@ -1685,11 +1808,14 @@ const Rutinas = () => {
 
                     <Col lg="12">
                       <FormGroup>
-                        <label className="form-control-label" htmlFor="email">
+                        <label
+                          className="form-control-label fw-bold text-primary"
+                          htmlFor="email"
+                        >
                           Descripcion
                         </label>
                         <Input
-                          className="form-control-alternative"
+                          className="form-control-alternative fw-bold text-dark"
                           id="descripcion"
                           name="descripcion"
                           placeholder="Esta rutina se enfoca en desarrollar fuerza en todo el cuerpo. Es ideal para quienes desean aumentar su masa muscular y mejorar la fuerza general."
@@ -1701,13 +1827,16 @@ const Rutinas = () => {
                       </FormGroup>
                     </Col>
 
-                    <Col lg="12">
+                    <Col lg="6">
                       <FormGroup>
-                        <label className="form-control-label" htmlFor="email">
+                        <label
+                          className="form-control-label fw-bold text-primary"
+                          htmlFor="email"
+                        >
                           Duracion
                         </label>
                         <Input
-                          className="form-control-alternative"
+                          className="form-control-alternative fw-bold text-dark"
                           id="duracion"
                           name="duracion"
                           placeholder="4 Meses"
@@ -1718,10 +1847,43 @@ const Rutinas = () => {
                         />
                       </FormGroup>
                     </Col>
-
+                    <Col lg="6">
+                      <FormGroup>
+                        <Label
+                          for="musculaturaTrabajada"
+                          className="form-control-label fw-bold text-primary"
+                        >
+                          Musculatura Trabajada:
+                        </Label>
+                        <Input
+                          type="select"
+                          name="musculo"
+                          id="musculo"
+                          className="form-control text-dark" // Clase Bootstrap para selects
+                          value={rutina.musculo} // Establece el valor seleccionado
+                          onChange={handleChangeRutina}
+                          required
+                        >
+                          <option value="">Selecciona una musculatura</option>
+                          <option value="cuadriceps">Cuádriceps</option>
+                          <option value="pectoral">Pectorales</option>
+                          <option value="biceps">Bíceps</option>
+                          <option value="espalda-baja">Espalda Baja</option>
+                          <option value="abdominales">Abdominales</option>
+                          <option value="hombros">Hombros</option>
+                          <option value="gluteos">Glúteos</option>
+                          <option value="isquiotibiales">Isquiotibiales</option>
+                          <option value="trapecios">Trapecios</option>
+                          {/* Agrega más opciones según tus necesidades */}
+                        </Input>
+                      </FormGroup>
+                    </Col>
                     <Col lg="12">
                       <FormGroup>
-                        <label className="form-control-label" htmlFor="cedula">
+                        <label
+                          className="form-control-label fw-bold text-primary"
+                          htmlFor="cedula"
+                        >
                           Ejercicios
                         </label>
                       </FormGroup>
@@ -1730,6 +1892,7 @@ const Rutinas = () => {
                           {ejercicios.map((ejercicio) => (
                             <FormGroup check inline key={ejercicio.id}>
                               <Input
+                                className="fw-bold text-dark"
                                 type="checkbox"
                                 value={ejercicio.id}
                                 name={`ejercicios`}
@@ -1797,11 +1960,14 @@ const Rutinas = () => {
                   <Row>
                     <Col lg="12">
                       <FormGroup>
-                        <label className="form-control-label" htmlFor="nombre">
+                        <label
+                          className="form-control-label fw-bold text-primary"
+                          htmlFor="nombre"
+                        >
                           Nombre
                         </label>
                         <Input
-                          className="form-control-alternative"
+                          className="form-control-alternative fw-bold text-dark"
                           id="nombre"
                           name="nombre"
                           placeholder="Marlon"
@@ -1815,11 +1981,14 @@ const Rutinas = () => {
 
                     <Col lg="12">
                       <FormGroup>
-                        <label className="form-control-label" htmlFor="email">
+                        <label
+                          className="form-control-label fw-bold text-primary"
+                          htmlFor="email"
+                        >
                           Descripcion
                         </label>
                         <Input
-                          className="form-control-alternative"
+                          className="form-control-alternative fw-bold text-dark"
                           id="descripcion"
                           name="descripcion"
                           placeholder="jesse@example.com"
@@ -1831,13 +2000,16 @@ const Rutinas = () => {
                       </FormGroup>
                     </Col>
 
-                    <Col lg="12">
+                    <Col lg="6">
                       <FormGroup>
-                        <label className="form-control-label" htmlFor="email">
+                        <label
+                          className="form-control-label fw-bold text-primary"
+                          htmlFor="email"
+                        >
                           Duracion
                         </label>
                         <Input
-                          className="form-control-alternative"
+                          className="form-control-alternative fw-bold text-dark"
                           id="duracion"
                           name="duracion"
                           placeholder="jesse@example.com"
@@ -1848,10 +2020,43 @@ const Rutinas = () => {
                         />
                       </FormGroup>
                     </Col>
-
+                    <Col lg="6">
+                      <FormGroup>
+                        <Label
+                          for="musculaturaTrabajada"
+                          className="form-control-label fw-bold text-primary"
+                        >
+                          Musculatura Trabajada:
+                        </Label>
+                        <Input
+                          type="select"
+                          name="musculo"
+                          id="musculo"
+                          className="form-control text-dark" // Clase Bootstrap para selects
+                          value={rutina.musculo} // Establece el valor seleccionado
+                          onChange={handleChangeRutina}
+                          required
+                        >
+                          <option value="">Selecciona una musculatura</option>
+                          <option value="cuadriceps">Cuádriceps</option>
+                          <option value="pectoral">Pectorales</option>
+                          <option value="biceps">Bíceps</option>
+                          <option value="espalda-baja">Espalda Baja</option>
+                          <option value="abdominales">Abdominales</option>
+                          <option value="hombros">Hombros</option>
+                          <option value="gluteos">Glúteos</option>
+                          <option value="isquiotibiales">Isquiotibiales</option>
+                          <option value="trapecios">Trapecios</option>
+                          {/* Agrega más opciones según tus necesidades */}
+                        </Input>
+                      </FormGroup>
+                    </Col>
                     <Col lg="12">
                       <FormGroup>
-                        <label className="form-control-label" htmlFor="cedula">
+                        <label
+                          className="form-control-label fw-bold text-primary"
+                          htmlFor="cedula"
+                        >
                           Ejercicios
                         </label>
                       </FormGroup>
@@ -1860,6 +2065,7 @@ const Rutinas = () => {
                           {ejercicios.map((ejercicio) => (
                             <FormGroup check inline key={ejercicio.id}>
                               <Input
+                                className="fw-bold text-dark"
                                 type="checkbox"
                                 value={ejercicio.id}
                                 name={`ejercicios`}

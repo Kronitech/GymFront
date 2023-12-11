@@ -27,6 +27,7 @@ import {
 
 import { useNavigate } from "react-router-dom";
 import urlImagen from "../../assets/img/user.png";
+import  logoDefault  from "../../assets/img/brand/logo.png";
 import { useUserContext } from "../Context/UserContext";
 const Sidebar = (props) => {
   const navigate = useNavigate();
@@ -122,15 +123,19 @@ const Sidebar = (props) => {
           <span className="navbar-toggler-icon" />
         </button>
         {/* Brand */}
-        {logo && logoImg ? (
+        {logo && logoImg === "" ? (
           <NavbarBrand className="pt-0" {...navbarBrandProps}>
             <img
               alt={logo.imgAlt}
               className="navbar-brand-img"
-              src={logoImg}
+              src={logoDefault}
             />
           </NavbarBrand>
-        ) : null}
+        ) : (
+          <NavbarBrand className="pt-0" {...navbarBrandProps}>
+            <img alt={logo.imgAlt} className="navbar-brand-img" src={logoImg} />
+          </NavbarBrand>
+        )}
         
         {/* User */}
         <Nav className="align-items-center d-md-none">

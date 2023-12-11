@@ -20,15 +20,17 @@ import { iniciarSesion } from "../../api/LoginApi";
 import { useState } from "react";
 import "../../assets/css/spinner.css";
 import { MagicTabSelect } from "react-magic-motion";
+import { useUserContext } from "../../components/Context/UserContext";
 
 const Login = () => {
+
   const navigate = useNavigate();
   // Usa useLocation para obtener la ubicación actual
   const location = useLocation();
-
+  const{modulo,setModulo}=useUserContext()
   // Analiza los parámetros de búsqueda (query string) de la URL
   const searchParams = new URLSearchParams(location.search);
-  const modulo = searchParams.get("modulo");
+  const moduloUser = searchParams.get("modulo");
   const [contraseñaIncorrecta, setContraseñaIncorrecta] = useState(false);
   const [mensaje, setMensaje] = useState("");
   const [downloading, setDownloading] = useState(false);
@@ -55,8 +57,8 @@ const Login = () => {
           const token = bearerToken.replace("Bearer ", "");
 
           const usuario = JSON.parse(JSON.stringify(parseJwt(token)));
-          const rol = usuario.roles[0].nombre.split("_")[1].toLowerCase();
-          if (modulo === rol) {
+          const rol = usuario?.roles[0].nombre?.split("_")[1].toLowerCase();
+          if (moduloUser === rol) {
             localStorage.setItem("token", token);
             localStorage.setItem("data", JSON.stringify(parseJwt(token)));
 
@@ -119,14 +121,14 @@ const Login = () => {
             </h1>
 
             <Nav fill className="text-center align-items-center ">
-              <NavItem>
+              <NavItem style={{ flex: 1 }}>
                 <NavLink active title="CLIENTE">
                   <Link to="?modulo=cliente">
                     <i className="fa fa-user text-primary" aria-hidden="true" />
                     <p className=" h6">CLIENTE</p>
                   </Link>
 
-                  {modulo === "cliente" && (
+                  {moduloUser === "cliente" && (
                     <div
                       style={{
                         position: "relative",
@@ -150,17 +152,17 @@ const Login = () => {
                   )}
                 </NavLink>
               </NavItem>
-              <NavItem>
+              <NavItem style={{ flex: 1 }}>
                 <NavLink title="ADMINISTRADOR">
                   <Link to="?modulo=admin">
                     <i
-                      className="fa fa-bar-chart text-danger"
+                      className="fa fa-id-card text-danger"
                       aria-hidden="true"
                     />
                     <p className=" h6">ADMIN </p>
                   </Link>
 
-                  {modulo === "admin" && (
+                  {moduloUser === "admin" && (
                     <div
                       style={{
                         position: "relative",
@@ -184,14 +186,14 @@ const Login = () => {
                   )}
                 </NavLink>
               </NavItem>
-              <NavItem>
+              <NavItem style={{ flex: 1 }}>
                 <NavLink title="ENTRENADOR">
                   <Link to="?modulo=entrenador">
                     <i className="fa fa-bolt text-yellow" aria-hidden="true" />
                     <p className=" h6">ENTRENA</p>
                   </Link>
 
-                  {modulo === "entrenador" && (
+                  {moduloUser === "entrenador" && (
                     <div
                       style={{
                         position: "relative",
@@ -215,7 +217,7 @@ const Login = () => {
                   )}
                 </NavLink>
               </NavItem>
-              <NavItem>
+              <NavItem style={{ flex: 1 }}>
                 <NavLink title="RECEPCIONISTA">
                   <Link to="?modulo=recepcionista">
                     <i
@@ -225,7 +227,7 @@ const Login = () => {
                     <p className=" h6">RECEPCI</p>
                   </Link>
 
-                  {modulo === "recepcionista" && (
+                  {moduloUser === "recepcionista" && (
                     <div
                       style={{
                         position: "relative",

@@ -46,7 +46,8 @@ import { useUserContext } from "../../../components/Context/UserContext";
 import { downloadPdfComprobante, sendEmailComprobante } from "../../../api/Membresia/Comprobante";
 
 const Cliente = () => {
-  const{ membresias,setMembresias,clientes,setClientes,setUsuariosMembresias,usuariosMembresias}=useUserContext();
+  const{membresiasActivas, clientes,setClientes,setUsuariosMembresias}=useUserContext();
+  const modulo=localStorage.getItem("modulo")
   const [tabs, setTabs] = useState(1);
   //const [clientes, setClientes] = useState([]);
   const [filtro, setFiltro] = useState("");
@@ -137,12 +138,6 @@ const Cliente = () => {
   };
 
 
-  // useEffect(() => {
-  //   listado();
-  // }, []);
-  // useEffect(() => {
-  //   listadoMembresias();
-  // }, []);
 
   //Columnas de la Datatable
   const columns = [
@@ -302,30 +297,7 @@ const Cliente = () => {
       console.log(error)
     })
   }
-  //Descargar pdf 
-  const descargarComprobante=(id)=>{
-    setDownloading(true)
-    downloadPdfComprobante(id)
-    .then((res) => res.blob())
-      .then((blob) => {
-        setDownloading(false);
-        if (blob.size === 0) {
-          alert("No hay membresias vendidas en ese rango de fechas");
-        } else {
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = "comprobantePago.pdf";
-          document.body.appendChild(a);
-          a.click();
-          
-        }
-      })
-      .catch((e) => {
-        setDownloading(false);
-        console.log(e);
-      });
-  }
+ 
   //GUARDAR USUARIO MEMBRESIA
   const usuarioMembresiaSave = async (usuarioId) => {
     setDownloading(true);
@@ -745,9 +717,9 @@ const Cliente = () => {
                                 Membresias
                               </h6>
                               <div className="pl-lg-4 d-flex overflow-auto">
-                                {membresias ? (
+                                {membresiasActivas ? (
                                   <>
-                                    {membresias.map((membresia) => (
+                                    {membresiasActivas.map((membresia) => (
                                       <Col lg="6" xl="5" key={membresia.id}>
                                         <Card
                                           className=""
@@ -987,7 +959,8 @@ const Cliente = () => {
                           placeholder="jesse@example.com"
                           type="email"
                           value={cliente.email}
-                          disabled
+                          onChange={handleChange}
+                          disabled={modulo==="admin"? false:true}
                           required
                         />
                       </FormGroup>

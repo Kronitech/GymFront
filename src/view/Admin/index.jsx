@@ -29,6 +29,7 @@ import {
   saveAsitencia,
 } from "../../api/Asistencias/Asistencia";
 import "../../assets/css/spinner.css";
+import { getMembresiaId } from "../../api/Membresia/Membresia";
 
 const Index = () => {
   const [sleep, setSleep] = useState(false);
@@ -56,6 +57,10 @@ const Index = () => {
   // Estado para almacenar la hora seleccionada
   const modulo = localStorage.getItem("modulo");
   const {
+    dataMembresiaActiva,
+    setMembresiaActual,
+    membresiaActual,
+
     membresiaActiva,
     cliente,
     fechaInicio,
@@ -71,7 +76,9 @@ const Index = () => {
   } = useUserContext();
 
   useEffect(() => {
-    verificarAsistencia();
+    if (membresiaActiva) {
+      verificarAsistencia();
+    }
     if (membresiaActiva && !asistenciaSeleccionada) {
       toggleRegistrar();
     }
@@ -128,8 +135,8 @@ const Index = () => {
 
   // Función para manejar la selección de una hora
   const handleHoraSeleccionada = (hora) => {
-    toggleRegistrar();
     if (!asistenciaSeleccionada) {
+      toggleRegistrar();
       let id = JSON.parse(localStorage.getItem("data")).id;
       const asistencia = {
         usuarioId: id,
@@ -181,7 +188,7 @@ const Index = () => {
     // Convierte la diferencia en días
     const diferenciaEnDias = diferenciaEnMilisegundos / (1000 * 60 * 60 * 24);
 
-    return Math.abs(Math.round(diferenciaEnDias)) + 1; // Usamos Math.abs para asegurarnos de que la diferencia sea positiva
+    return Math.abs(Math.round(diferenciaEnDias)) ; // Usamos Math.abs para asegurarnos de que la diferencia sea positiva
   };
 
   useEffect(() => {
@@ -228,6 +235,18 @@ const Index = () => {
   const agregarCero = (numero) => {
     return numero < 10 ? `0${numero}` : numero;
   };
+  //Busco la membresia actual
+  const membresiaActualCliente = () => {
+    getMembresiaId(dataMembresiaActiva.membresiaId)
+      .then((res) => res.json())
+      .then((data) => {
+        console.log(data);
+        setMembresiaActual(data);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
   return (
     <>
       <Header />
@@ -252,13 +271,14 @@ const Index = () => {
                               className="fa fa-check-circle fa-1x"
                               aria-hidden="true"
                             ></i>{" "}
-                            {calcularDiferenciaEnDias(fechaFin?.fechaFin)} Dias
+                            {calcularDiferenciaEnDias(fechaFin?.fechaFin)} Dias{" "}
+                            <small>
+                              {" "}
+                              termina: {fechaFin.fechaFin?.split("T")[0]}{" "}
+                            </small>
                           </p>
-                          <p className="text-dark fw-bold">
-                            Fecha Inicio:{" "}
-                            {fechaInicio?.fechaInicio?.split("T")[0]} Fecha Fin:{" "}
-                            {fechaFin.fechaFin?.split("T")[0]}{" "}
-                          </p>
+
+                         
                         </>
                       ) : (
                         <>
@@ -286,6 +306,17 @@ const Index = () => {
                         >
                           Asistencia
                         </Button>
+                      </div>
+                    )}
+                    {membresiaActiva &&(
+                      <div>
+                         <hr />
+                          <p className="h3 text-center">
+                            {membresiaActual.nombre}
+                          </p>
+                          <p>
+                            <small>{membresiaActual.descripcion}</small>
+                          </p>
                       </div>
                     )}
                   </Row>

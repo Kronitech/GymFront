@@ -8,7 +8,6 @@ const ChartComponent = ({ info }) => {
   const [datos, setDatos] = useState([]);
   const [max, setMax] = useState(0);
   useEffect(() => {
-    console.log(info);
     setDatos(info);
     setDownloading(false)
     const maxi = Math.max(...info);
